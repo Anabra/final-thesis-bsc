@@ -1,0 +1,81 @@
+\documentclass[12pt,a4paper,twoside]{report}
+
+\usepackage{style}
+\usepackage{subfiles}
+
+\title{Dead extension elimination for Haskell modules}
+\date{\today}
+\author{Péter Dávid Podlovics}
+
+\begin{document}
+	
+	\subfile{titlepage}
+	
+	\setcounter{tocdepth}{0}
+	\begin{spacing}{0.1}
+		\tableofcontents
+	\end{spacing}
+	
+	\chapter{Introduction}
+	\subfile{introduction}
+	
+	\addcontentsline{toc}{part}{User's guide}
+	\part*{User manual}
+	\addtocontents{toc}{\protect\begin{adjustwidth}{0.8cm}{0cm}}% Begin
+		\chapter{Installation}
+		\subfile{installation}
+		
+		\chapter{User interface}
+		\subfile{user_interface}
+	\addtocontents{toc}{\protect\end{adjustwidth}}%  End
+	
+	\addcontentsline{toc}{part}{Background}
+	\part*{Background}
+	\addtocontents{toc}{\protect\begin{adjustwidth}{0.8cm}{0cm}}% Begin
+		\chapter{Haskell-Tools} \label{haskell-tools}
+		\subfile{haskell_tools}
+		
+		\chapter{GHC language extensions} \label{ghc-exts}
+		\subfile{ghc_language_extensions}
+		
+		\chapter{The extension elimination problem}
+		\subfile{ext_elim_problem}
+		
+		\chapter{Related work}
+		\subfile{related_work}
+	\addtocontents{toc}{\protect\end{adjustwidth}}%  End
+		
+	\addcontentsline{toc}{part}{Developer documentation}
+	\part*{Developer documentation}
+	\addtocontents{toc}{\protect\begin{adjustwidth}{0.8cm}{0cm}}% Begin
+		\chapter{Specification}
+		\subfile{specification}
+				
+		\chapter{The extension eliminating algorithm} \label{algorithm}
+		\subfile{algorithm}
+			
+		\chapter{Extension checkers} \label{checkers}
+		\subfile{checkers}
+		
+		\chapter{Architecture}
+		\subfile{architecture}
+		
+		\chapter{Testing}
+		\subfile{testing}
+		
+		\chapter{Results}
+		\subfile{results}
+	\addtocontents{toc}{\protect\end{adjustwidth}}%  End
+
+	\addtocontents{toc}{\protect\vspace*{\baselineskip}\protect}
+	\chapter{Conclusions}
+	\subfile{conclusions}
+	
+	\appendix
+	\addtocontents{toc}{\protect\setcounter{tocdepth}{0}}
+	\chapter{Figures}
+	\subfile{appendices}
+	
+	\subfile{bibliography}
+	
+\end{document}

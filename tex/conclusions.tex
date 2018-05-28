@@ -1,0 +1,10 @@
+\documentclass[main.tex]{subfiles}
+\begin{document}
+	
+	In this \paper{}, we presented a solution for the extension elimination problem of Haskell compilers. Since in the case of the Glasgow Haskell Compiler only a limited amount of semantic information is available about the program, we had to generalize the idea of extension elimination. In our method, the compiler specific individual extension checkers are clearly separated from the more general phases of the elimination process. Our solution is able to handle any system of extensions regardless compiler as long as the the individual checkers for the extensions are defined. The method was implemented as an external tool in the Haskell-Tools framework.
+	
+	We tested our tool on various real life Haskell packages downloaded from the Hackage database. Analyzing the results, we found that in these packages more than every fifth language extension was redundant. It is also worth mentioning, the tool gave no false positive results, which means, every single extension it removed was really unnecessary. We also examined which types of extensions were the most redundant, and concluded that these are the type system related ones. The most possible explanation for this result is the lack of syntactic clues. Many type system related extensions have no syntactic evidence in the source code. As the software evolves over time, these extensions might become redundant, but programmers can hardly determine whether they are still needed or not. As a result, the number of unused extensions only increase as the size of the codebase grows.
+	
+	In the future, we aim to extract more information from the compiler in order to make the individual extension checkers more precise. As a result, the tool will be able to more accurately determine extensions required by a Haskell module.
+	
+\end{document}

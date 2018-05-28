@@ -1,0 +1,21 @@
+\documentclass[main.tex]{subfiles}
+\begin{document}
+	
+	% style
+	\tikzset{styRectDef/.style = {rectangle, rounded corners, draw=black, inner xsep=3mm, inner ysep=3mm, font = \large, minimum width = 6cm}}
+	\tikzcustom{}		
+	
+	\begin{figure}[h]
+		\centering
+		\begin{tikzpicture}[ node distance = 1.2cm and 0cm, on grid ]
+		
+		\node [styRectGy] (GHC) 							   {\pilcode{Ghc}};
+		\node [styRectGy] (ST)  [above =of GHC]  {\pilcode{StateT ExtMap}};
+		\node [styRectGy] (RD)  [above =of ST]   {\pilcode{ReaderT [Extension]}};
+		
+		\end{tikzpicture}
+		\caption{The \pilcode{ExtMonad} monad stack}
+		\label{fig:monad-stack}
+	\end{figure}
+	
+\end{document}

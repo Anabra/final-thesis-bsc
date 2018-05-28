@@ -1,0 +1,100 @@
+\documentclass[main.tex]{subfiles}
+\begin{document}
+	
+	The tool presented in this thesis is implemented as a refactoring in the Haskell-Tools framework. Haskell-Tools is a software development enhancing framework for the programming language Haskell. It provides several automated code transformation options such as renaming, organizing imports, floating code segments in or out and as of now, removing unused extensions from modules and projects.
+	
+	In this chapter we will go over the installation process of the Haskell-Tools framework. Some instructions presented in the following sections may only work on Linux-based operating system such as Ubuntu. Also, some steps require a reliable network connection to download data from certain repositories. These steps can be skipped if the user wants to install Haskell-Tools from the provided DVD. Also it is important to note, that the installation files for the prerequisite software (Haskell Platform and Atom) are \textbf{not} present on the DVD.
+	
+	\section{System requirements}
+	
+	\section{Prerequisites}
+	
+	Before installing Haskell-Tools, we need to install the Haskell Platform. Haskell Platform is a multi-OS distribution which includes the following software:
+	
+	\begin{itemize}
+		\item Glasgow Haskell Compiler
+		\item Cabal build system
+		\item Stack tool
+		\item 35 core \& widely-used packages
+	\end{itemize}
+	
+	To summarize, we get the de-facto Haskell compiler GHC, the build system called Cabal, which allows for downloading and installing Haskell packages, the Stack tool which extends the functionalities of Cabal providing a full-fledged project management environment and 35 commonly used Haskell libraries. We can install the whole packag eon Ubuntu with a single line of command.
+	
+	\begin{bash}
+		$ sudo apt-get install haskell-platform
+	\end{bash}
+	
+	Haskell-Tools in itself only provides a command line interface for performing refactorings on our projects. However, it can be integrated into many different text editors, such as Atom. Atom is a highly-customizable text editor, and Haskell-Tools is already integrated into it. We can install Atom with the following commands.
+	
+	\begin{bash}
+		$ sudo add-apt-repository ppa:webupd8team/atom
+		$ sudo apt update
+		$ sudo apt install atom
+	\end{bash}
+	
+	Now, we have everything set up in order to install the framework itself.
+	
+	\section{Installing Haskell-Tools}
+	
+	There are two ways to install Haskell-Tools. We can install it using \pilcode{stack}, or we can install it from source. For end-users, we recommend the first option.
+	
+	\subsection{Using \pilcode{stack}}
+	
+	Installing Haskell-Tools using \pilcode{stack} is really easy. We need two install two packages: the \pilcode{daemon} and the \pilcode{cli}. The \pilcode{daemon} is responsible for managing the entire framework: loading modules, executing refactorings, communicating with other processes. The \pilcode{cli} provides a command line interface for the users to perform refactorings. \pilcode{stack} can download and install both packages using the following command.
+	
+	\begin{bash}
+		$ stack install haskell-tools-daemon haskell-tools-cli --resolver=nightly-[current-date]
+	\end{bash}
+	
+	\subsection{From source}
+	
+	We can also install the framework from the source code itself. First, we need to download the entire codebase. This step can be skipped, if the user is installing the framework from the provided DVD.
+	
+	\begin{bash}
+		$ git init
+		$ git clone https://github.com/haskell-tools/haskell-tools.git
+	\end{bash}
+	
+	After that, we have to navigate into the downloaded folder and build the entire project. Using the commands below, \pilcode{stack} will build the project and copy the generated executables into a certain directory. Make sure to note down the path of the \pilcode{ht-daemon} executable, we may need it later.
+	
+	\begin{bash}
+		$ cd haskell-tools
+		$ stack install
+	\end{bash}
+	
+	\section{Installing Atom integration}
+	
+	A simple command line interface may not be the most convenient way to refactor our source code. Fortunately, Haskell-Tools is integrated into Atom, so we can enjoy all the great features of a highly-customizable graphical text editor. Again, we have two options for the installations. We can install the officially released latest LTS, or we can download the most recent version, and install it from source.
+	
+	\subsection{Latest release}
+	
+	Provided we have a reliable Internet connection, the easiest option for installing the latest official release is to use Atom's built-in package manager, and install the package \pilcode{haskell-tools}. We can find the package manager in Atom under \pilcode{Edit > Preferences > Install}.
+	
+	Another option is to use the command line interface provided by \pilcode{apm}. Issuing the following command will download and install the Haskell-Tools package for Atom, and also all of its dependencies.
+	
+	\begin{bash}
+		$ apm install haskell-tools
+	\end{bash}
+	
+	\subsection{Latest build}
+	
+	Our other option is two install it from source, which we can download from the corresponding repository, or from the provided DVD.
+	
+	\begin{bash}
+		$ git init
+		$ git clone https://github.com/nboldi/haskell-tools-atom.git
+	\end{bash}
+	
+	After downloading the source files, we need to navigate into the root folder, and download all of the package's dependencies, and then copy the folder into the \pilcode{packages} directory of Atom. On Linux, the last command will elude the copy and only create a symbolic link. This means, if we modify anything in this folder, it will a direct effect on the behavior of the package.
+	
+	\begin{bash}
+		$ cd haskell-tools
+		$ apm install
+		$ apm link
+	\end{bash}
+	
+	\subsection{Settings}
+	
+	As a final step, we have to sep up Haskell-Tools. Usually the framework finds all the executables it needs, but in some cases, we have to provide the paths ourselves. We can do that under \pilcode{Haskell > Settings}. The integration needs two executables: \pilcode{ht-daemon} and \pilcode{hfswatch}. During the installation of Haskell-Tools, we already noted the path to \pilcode{ht-daemon}. However, since \pilcode{hfswatch} is not part of Haskell-Tools, its executable will not be copied into the global \pilcode{bin} folder, we have to do it manually. It is located in the same directory as the other executables, under the \pilcode{.stack-work} folder. Copy it into the global \pilcode{bin} folder, and provide the path to both \pilcode{ht-daemon} and \pilcode{hfswatch} in Atom. After that, the framework is completely installed and is ready for use.
+	
+\end{document}

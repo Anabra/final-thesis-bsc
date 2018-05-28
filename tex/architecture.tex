@@ -1,0 +1,25 @@
+\documentclass[main.tex]{subfiles}
+\begin{document}
+	
+	\section{The implemented tool}
+	
+	The method was implemented as a program transformation in the Haskell-Tools framework. The refactoring can be applied to a single module or to a complete program package as well. Applying the refactoring to a module will eliminate all unnecessary extensions from it, as well as highlight the language elements using the remaining compiler extensions. The latter feature can help programmers identify the reason why a certain extension is enabled, aiding them in the process of manually transforming the source code so that it no longer requires the given extension.
+	
+	We chose to implement the tool in an external framework to avoid the many complications that may arise when adding a new feature to a compiler. Implementing this particular feature in the Glasgow Haskell Compiler would have required numerous code changes in many different places. Modifying the core of such an immense codebase might result in unforeseen consequences. Using the Haskell-Tools framework as a shell for our tool, it can be more easily made publicly available.
+	
+	\section{Components}
+	
+		\subsection{Refactoring framework}
+		\subfile{refactor_package}
+		
+		\subsection{Command line interface} 
+		\subfile{cli_package}
+	
+	\section{Extension organizer}
+	
+		\subsection{Computational context}
+		\subfile{monad_stack}
+	
+		\subsection{Syntax tree traversal}
+	
+\end{document}

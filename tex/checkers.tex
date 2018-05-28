@@ -1,0 +1,41 @@
+\documentclass[main.tex]{subfiles}
+\begin{document}
+	
+	The checking methodology is specific to every extension, but it is heavily reliant on the underlying representation of the abstract syntax tree. This means if an extension changes in its functionality, we only have to modify a single checker (namely the one responsible for checking the extension in question), but if a node in the syntax tree changes, every checker performing any analysis on the node have to be altered.
+	
+	Also, since our representation only contains type information for nodes with qualified names, the checkers can only yield an approximate solution for the necessity of a certain extension in our module. When defining the checkers, the main consideration is to avoid false positive results, that is, eliminating an extension from a module that actually requires it. In this case the code would not compile.
+	
+	% TODO: comprehensive list of implemented checkers
+	Currently, we have 44 implemented individual checkers. We support all extensions discussed in Section~\ref{extension-categories} except for \ext{ImplicitParams}. We also only have limited support for \ext{ScopedTypeVariables} and \ext{RankNTypes}. In the following sections we will present a handful of exemplary checkers to highlight the main challenges we faced while implementing the extension checkers. They are divided into two groups: those performing only syntactic examination, and those that demand semantic analysis. 
+	
+	\section{Syntactic checkers}
+	
+	In Section~\ref{syntactic-exts}, we discussed some extensions introducing new syntactic features (mainly syntactic sugar) to the language. Besides these extensions, there are many other ones providing completely different functionalities, but still having some sort of syntactic evidence in the source code. For instance, despite being one of the type system related extensions, \ext{TypeFamilie} also introduces unique syntactic elements, namely a new keyword: \pilcode{family}. We can declare a new type family using this new keyword unique to this extension.
+	
+	\begin{oneLineHaskell}
+		type family T a
+	\end{oneLineHaskell}
+	
+	Many other extensions requiring semantic analysis have similar syntactic clues. These clues are unique to certain language extensions, which means, the presence of clue in the source code necessarily implies enabling the given extension. As a result, is some cases we can avoid performing semantic analysis on the program by searches for syntactic clues in the syntax tree.
+	
+	Since the AST of Haskell-Tools also stores the concrete syntax of the source code \textbf{before} desugaring, checking whether a syntactic extension (or an extension having any syntactic evidence in the source) is required is a simple task. We only have to traverse the syntax tree, and if we encounter a certain node representing the syntactic clue introduced by an extension, we mark the node as evidence for that particular extension.
+	
+	Unfortunately, the absence of such clues for extensions requiring semantic analysis, does not mean the extension in not needed. To determine whether such extensions are required, we have to utilize semantic checkers.
+	
+	\section{Semantic checkers}
+		
+	Semantic checker, as their name suggests, perform semantic analysis on the syntax tree of the module. Most of the time they examine the types of certain nodes in the AST, and determine whether they require a given extension. As discussed in Section~\ref{certainty-levels}, the lookup functions recovering the type information of nodes can fail. In those cases, all semantic checkers will use the \emph{MissingInformation} certainty level to signal the failure.
+	
+	One of the main issues we had to solve in case of the semantic checkers was making type synonyms transparent. Type synonyms can often hide very complex types, and in many cases, analyzing only the synonym itself is not sufficient to determine whether a certain extension is needed. In such cases, we have to look through arbitrarily many layers of type synonyms in order to examine the fully expanded type of a program element. All of the checkers we defined operate in this way.
+
+	\subsection{FlexibleContexts} \label{flexible-contexts}
+	\subfile{flexible_contexts}
+	
+	\subsection{TypeFamilies}
+	\subfile{type_families}
+	
+	\section{C preprocessor}
+	\subfile{cpp}
+	
+	
+\end{document}

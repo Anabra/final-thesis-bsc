@@ -1,0 +1,33 @@
+\documentclass[main.tex]{subfiles}
+\begin{document}
+	\newlength{\vDist}
+	\newlength{\hDist}
+	\begin{tikzpicture}[align=center, draw=black, scale=1]
+	
+	% add styles
+	\tikzset{styRectDef/.style = {rectangle, rounded corners, draw=black, inner xsep=6mm, inner ysep=3mm}}
+	\tikzcustom{}
+	
+	% set distances
+	\setlength{\vDist}{1.5cm}
+	\setlength{\hDist}{2cm}
+	
+	% nodes
+	\node [styRectGn] (ast) {AST};
+	\node [styRectBl, right=\hDist of ast] (formulas) {Formulas};
+	\node [styRectBl, above=\vDist of formulas] (formulasC) {Formulas};
+	\node [styRectBl, below=\vDist of formulas] (extensionsets) {Extension sets};
+	\node [styRectGn, right=\hDist of formulas] (solution) {Final solution};
+	
+	\node [styLabel] (certainty) at ([shift={(1,0.45)}]formulasC) {certainty};
+	\node [styLabel] (types) at ([shift={(1,0.40)}]ast) {types};
+	
+	% connections
+	\draw[styConn, bend left]  (ast) to node[midway,fill=white] {checkers} (formulasC);
+	\draw[styConn] 						 (formulasC) to node[midway,fill=white] {\textit{filtering}} (formulas);
+	\draw[styConn] 						 (formulas) to node[midway,fill=white] {SAT-solver} (extensionsets);
+	\draw[styConn, bend right] (extensionsets) to node[midway,fill=white] {\textit{ranking}} (solution);
+	\end{tikzpicture}
+	\caption{Process diagram of the algorithm}
+	\label{fig:algo-proc}
+\end{document}

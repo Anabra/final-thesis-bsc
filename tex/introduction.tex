@@ -1,0 +1,14 @@
+\documentclass[main.tex]{subfiles}
+\begin{document}
+	
+	Haskell is a unique programming language in the sense that some of its compilers not only implemented the most recent standard \cite{haskell2010-bib}, but also added completely new features to the language. These features are accessible through certain language extensions, enabled by so-called \emph{language pragmas}, declared in the first few lines of the module.
+	
+	Language extensions can bring numerous new functionalities into the language. These functionalities can range from only introducing some syntactic sugar to the language to even modifying the underlying type system of the compiler. 
+	
+	\section{Motivation}
+	
+	During the software development cycle, language extensions can easily pile up in Haskell modules. A long list of language extensions can not only impair the readability of our source code, but also increase the compilation time of our package, and reduce the portability of our code base. In many cases, a substantial amount of these extensions are not even used in the modules. This means, they could be safely removed from the source code. Unfortunately, currently neither the compilers, nor any external tools can offer meaningful advice for programmers to organize their extensions. As a result, developers have to manually maintain every single module in their packages. It is also worth mentioning that for an algorithm it might be relatively easy to decide whether a certain extension is required, but for the human eye, it can pose a difficult task. Most type system related extension do not necessarily have any syntactic evidence present in the source. Even the \textbf{inferred} types of certain language elements can require turning on some of these extensions. As the software evolves over time, these extensions might become redundant, but developers can hardly determine whether these extensions are still needed or not.
+	
+	Our goal is to implement a tool that can help programmers automatically remove unnecessary extensions from their modules, and also locate the program elements still requiring the remaining language extensions. By highlighting these program elements, developers can more easily understand why a certain extension is needed in their programs.
+	
+\end{document}

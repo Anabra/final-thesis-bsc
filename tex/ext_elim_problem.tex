@@ -1,0 +1,66 @@
+\documentclass[main.tex]{subfiles}
+\begin{document}
+	
+	In this chapter we will discuss the problem of eliminating unused extensions from Haskell modules. The method presented in the \paper{} will be applied to the extension system of the Glasgow Haskell Compiler. Since our method will be implemented as an external tool, it will not have access to all information available during the compilation process. As a result we face more complicated challenges than just implementing individual extension checkers. To address this issue, we need to not only specify the individual checkers for a specific extension system, but also present a generic solution which can determine a minimal extension set required by a module from the results calculated by the checkers. We will discuss some of the challenges the implemented tool will have to overcome below. All program code examples presented in the \paper{} are compiled with GHC 8.2.1.
+	
+	\section{Missing semantic information}
+	
+	As mentioned earlier, the extension eliminating algorithm will only have access to a limited amount of information. The reason for this, is that after calculating the intermediate types of certain language elements, the type checking system of GHC discards this information. For instance, the type information of subexpressions is not available after the type checking phase ends.
+	
+	As a consequence, our algorithm can only approximate the extension set required by certain program elements.
+	
+	\section{Extension ambiguity} \label{extension-ambiguity}
+	
+	In some situations, it is not exactly clear which extension(s) a certain language element requires. As an example, type equalities in GHC can be enabled by both \ext{GADTs} and \ext{TypeFamilies}. This makes the extensions needed by the program element ambiguous. When we investigate an ambiguous language element like the one above mentioned above, we must make a choice about which extension(s) to use. However, this choice can drastically impact the final extension set required by the module. See Program~code~\ref{code:ext-ambiguity-parsec}, an excerpt\footnote{The excerpt is from module \pilcode{Distribution.Compat.Graph}} from the parsec library~\cite{parsec}.
+	
+	\begin{codeFloat}
+		\begin{haskell}
+			class Ord (Key a) => IsNode a where
+			%\colorbox{lightgreen}{type Key a :: *}%
+			
+			instance (IsNode a, IsNode b, %\colorbox{lightblue}{Key a ~ Key b}%) => IsNode (Either a b) where
+			type Key (Either a b) = Key a
+		\end{haskell}
+		\caption{Extension ambiguity in parsec}
+		\label{code:ext-ambiguity-parsec}
+	\end{codeFloat}
+	
+	As we can see, the program defines a class called \ilcode{IsNode} with an associated type called \ilcode{Key} (highlighted in green). Associated types can be enabled by \ext{TypeFamilies}. The program	also uses a type equality in the constraint of the \ilcode{IsNode} class instance (highlighted in blue). Since either of the two extensions can enable type equalities, arbitrarily, we could turn on \ext{GADTs} here, and the final extension set would contain both \ext{GADTs} and \ext{TypeFamilies}. However, if we chose to use \ext{TypeFamilies} instead (which enables both features), the final extension set would contain only that extension.
+	
+	% Our method resolves this problem by introducing \emph{extension formulas} which abstract over the relations between extensions.
+	
+	\section{Using overly complex extensions}
+	
+	Among the extensions of GHC, we can define so-called \emph{implication relations}. Essentially this means, if we turn on a certain extension, all implied extensions will be turned on as well. From the perspective of compiler designers, this hierarchy is really useful if we want to extend the functionalities of already existing language extensions. However, from a user's point of view, these implicit relations can lead to unnecessary extension usage. Take a look at Program code~\ref{code:gadt-syntax}.
+	
+	\begin{codeFloat}[H]
+		\begin{haskell}
+			data Expr a where
+			Add :: Expr a -> Expr a -> Expr a
+			Mul :: Expr a -> Expr a -> Expr a
+		\end{haskell}
+		\caption{\ext{GADTSyntax} example}
+		\label{code:gadt-syntax}
+	\end{codeFloat}
+	
+	\noindent
+	In the example above we declared a custom data type using the \emph{generalized algebraic data type syntax}. This feature can be enabled by turning on the \ext{GADTSyntax} extension. However, if we want to compile this piece of code without turning on the extension, GHC will fail, and show the following error message.
+	
+	% escapes are used to "turn off" the syntax highlighting
+	\begin{oneLineHaskell}
+		%Illegal generalised algebraic data declaration for% "Expr"
+		%(Use GADTs to allow GADTs)%
+	\end{oneLineHaskell}
+	
+	\noindent
+	GHC suggests turning on the \ext{GADTs} language extension. It is a partially correct answer, since \ext{GADTs} implies \ext{GADTSyntax}, so the code will successfully compile after enabling the former extension. The problem here is that we did not use any functionalities provided by \ext{GADTs}. We could have enabled a much simpler language extension, namely \ext{GADTSyntax} which would have achieved the exact same behavior.
+	
+	% Our method overcome this issue by minimizing the possible extension sets based on the implication relations between the extensions.
+	
+	\section{Configurability}
+	
+	Sometimes, presenting a tool to the user as a black box may not be the course of action. It is often advantageous to offer some sort of configuration entry points for the tool. For example, the user might want to port his/her codebase to a different platform. This platform might already support some subset of extensions currently used in the program package. In this case, the user may want to specify these extensions in order to guide the extension elimination process, so that it prioritizes those extensions over others.
+	
+	Our algorithm also uses a given set of certainty levels for extension sets associated with language elements. These certainty levels describe how much confidence we have in the necessity of those extensions. The users of the tool can choose which certainty levels to take into consideration when calculating the final extension set.
+	
+\end{document}

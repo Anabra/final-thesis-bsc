@@ -1,0 +1,130 @@
+\documentclass[main.tex]{subfiles}
+\begin{document}
+	
+	\section{Experiments with various Haskell packages}
+	
+	Besides verifying the tool within an isolated environment using unit tests, we also applied it to real life Haskell packages. Namely, these packages were \pilcode{pandoc}~\cite{pandoc}, \pilcode{http-client}~\cite{http-client} and \pilcode{references}~\cite{references-bib}. \pilcode{pandoc} and \pilcode{http-client} were chosen because they are well-known, commonly used, huge Haskell packages. However, we also wanted to test our tool on a package using more type system related language extensions. For that purpose, we chose the \pilcode{references} library.
+	
+	While running the tests, the tool was configured with a complexity function ranking extensions based on how many other extensions they imply (Section~\ref{ranking-solutions}). Furthermore, we wanted to avoid false positive results, so all certainty levels were taken into consideration when calculating the final extension set.
+	
+	In tables (\ref{table:pandoc-results})--(\ref{table:references-results}), we illustrate the results of applying the tool to the packages mentioned above. In these tables only those extensions are shown whose usage statistics were impacted by the refactoring. That is, the tool could remove at least one language pragma enabling those extensions. The extensions not affected by the refactoring are aggregated in to the "other" category. During the extension elimination process, the algorithm gave \underline{no false positive results}, so every single extension the tool removed was unnecessary.
+	
+	\newpage
+	
+	\subsection{pandoc}
+	
+	The summarized results for \pilcode{pandoc} can be seen in Table~\ref{table:pandoc-results}.
+				
+	\begin{center}
+		\begin{minipage}{0.72\linewidth}
+			\captionof{table}{Pandoc's extension usage statistics}
+			\label{table:pandoc-results}
+			\begin{tcolorbox}[tab2,tabularx={l||r|r||r}]
+				Extension               & Required  & Unused   & Redundancy      \\
+				\hline\hline
+				TypeSynonymInstances    &   0       &  7       & 100\% \\\hline
+				OverloadedStrings				&	 31				&  2			 & 6\%		\\\hline
+				RecordWildCards         &   4       &  1       & 20\% \\\hline
+				GADTs                   &   1       &  3       & 75\%	\\\hline
+				FlexibleInstances       &   9       &  9       & 50\% \\\hline
+				FlexibleContexts        &  15       &  4       & 21\% \\\hline
+				ExplicitForAll          &   3       &  3       & 50\% \\\hline
+				CPP                     &   8       &  9       & 52.9\% \\\hline
+				Other										&  90				&  0 		   & 0\%  \\
+				\hline\hline
+				\textbf{Overall}			  & 161       & 38       & \textbf{19.2\%} \\
+			\end{tcolorbox}	
+		\end{minipage}
+	\end{center}
+	
+	Pandoc is a library which helps converting certain markup formats into others. Since these conversions are string based, their performance is greatly dependent on the representation of strings. For this reason, the library utilizes highly efficient string representations. As described in Section~\ref{overloaded-strings}, \ext{OverloadedStrings} can ease the usage of these more efficient string types. As we can see in the results, the library makes good use of this extension, and more importantly, utilizes it correctly.
+	
+	The opposite of this can be said for \ext{TypeSynonymInstances}, which was completely redundant. As we can see, the extension was enabled in seven different modules, completely unnecessarily in all of them. We can also observe that the other type system related extensions such as \ext{GADTs}, \ext{FlexibleInstances} and \ext{FlexibleContexts} are quite often as well, but inappropriately. Together, these four extensions are responsible for over 60\% of the total redundancy,
+	
+	%TODO: fix line
+	The library uses just a single language extension introducing some kind of syntactic sugar, namely \ext{RecordWildCards}, which was unnecessarily enabled only a single time. 
+	
+	Finally, \ext{CPP} is enabled in seventeen modules of \pilcode{pandoc}, but as we can see, more than half of these modules did not utilize any features of the C preprocessor. This extent of redundancy is also apparent in \pilcode{http-client}.
+		
+	
+		
+	\subsection{http-client}
+		
+	The results for \pilcode{http-client} are summarized in Table~\ref{table:http-client-results}.
+	
+	In \pilcode{http-client}, the extension responsible for the majority of the redundancy is \ext{CPP}. This necessity of this extension can be easily decided just by looking for certain preprocessor directives or macros in the source code. For some reason though, developers of both libraries often turned it on needlessly. A possible explanation for this can be that the C preprocessor is so frequently used in bigger projects, that programmers treat it more carelessly.
+		
+	\begin{center}
+		\begin{minipage}{0.73\linewidth}
+			\captionof{table}{Http-client's extension usage statistics}
+			\label{table:http-client-results}
+			\begin{tcolorbox}[tab2,tabularx={l||r|r||r}]
+				Extension             & Required  & Unused   & Redundancy      \\
+				\hline\hline
+				TupleSections         &   1       &  1       & 50\% \\\hline
+				ScopedTypeVariables   &   7       &  1       & 12,5\% \\\hline
+				RecordWildCards       &   3       &  1       & 25\% \\\hline
+				MultiParamTypeClasses &   0       &  2       & 100\% \\\hline
+				FlexibleContexts      &   4       &  3       & 42,8\% \\\hline
+				DeriveFunctor         &   0       &  2       & 100\% \\\hline
+				DeriveFoldable        &   1       &  2       & 66,7\% \\\hline
+				DeriveDataTypeable    &   5       &  1       & 16,7\% \\\hline
+				BangPatterns          &   1       &  1       & 50\% \\\hline
+				CPP                   &   9       &  7       & 43,8\% \\\hline
+				Other									&  54				&  0 		   & 0\%  \\
+				\hline\hline
+				\textbf{Overall}			& 85        & 22       & \textbf{25.8\%} \\
+			\end{tcolorbox}	
+		\end{minipage}
+	\end{center}
+	
+	The type system related extensions, namely \ext{MultiParamTypeClasses} and \ext{FlexibleContexts} are also misused in this package just like in \pilcode{pandoc} and as we will see in \pilcode{references} as well.
+	
+	For the syntactic extensions, the same can be said as for \pilcode{pandoc}: they are rarely, but correctly used.
+		
+		
+	
+	\subsection{references}
+	
+	Finally, the results for the \pilcode{references} library can be seen in Table~\ref{table:http-client-results}.
+		
+	\begin{center}
+		\begin{minipage}{0.73\linewidth}
+			\captionof{table}{References' extension usage statistics}
+			\label{table:references-results}
+			\begin{tcolorbox}[tab2,tabularx={l||r|r||r}]
+				Extension              & Required  & Unused   & Redundancy      \\
+				\hline\hline
+				UndecidableInstances   &   0       &  1       & 100\% \\\hline
+				TypeOperators          &   2       &  3       & 60\% \\\hline
+				TypeFamilies           &   3       &  2       & 40\% \\\hline
+				TupleSections          &   0       &  1       & 100\% \\\hline
+				RankNTypes             &   3       &  4       & 57,1\% \\\hline
+				MultiParamTypeClasses  &   3       &  4       & 57,1\% \\\hline
+				LambdaCase             &   5       &  1       & 16,7\% \\\hline
+				KindSignatures         &   0       &  1       & 100\% \\\hline
+				FunctionalDependencies &   1       &  1       & 50\% \\\hline
+				FlexibleInstances      &   5       &  3       & 37,5\% \\\hline
+				FlexibleContexts       &   8       &  2       & 20\% \\\hline
+				CPP                    &   0       &  1       & 100\% \\\hline
+				Other									 &  40			 &  0 		  & 0\%  \\
+				\hline\hline
+				\textbf{Overall}   		 &  70       & 22       & \textbf{31.4\%} \\
+			\end{tcolorbox}	
+		\end{minipage}
+	\end{center}
+	
+	The \pilcode{references} package provides generic purpose data accessors for arbitrary types. To achieve this, the package uses numerous type system related extensions.	We chose this library to test our theory whether type system related extensions are enabled unnecessarily more often in Haskell modules. As we can see from the results, the assumption was correct, \pilcode{references} had the highest redundancy from all three packages. This redundancy mainly comes from the type system related extensions such as \ext{RankNTypes}, \ext{MultiParamTypeClasses} and \ext{FlexibleInstances}. We can also observe that the type system related extensions present in the other two libraries were mostly enabled needlessly as well.
+	
+	This can be explained by the lack of syntactic evidence present in the source code for most type system related extensions. In some cases, even the \textbf{inferred} types of certain language elements can require some of these extensions (Section~\ref{flexible-contexts}). As the software evolves over time, these extensions might become redundant, but programmers can hardly determine whether they are still needed or not. As a result, the number of unused extensions only increase as the size of the codebase grows.
+	
+	It is also worth mentioning, that just like in the other two packages, the only syntactic extension in this library (\ext{LambdaCase}) was used appropriately. It was enabled unnecessarily just a single time. A possible explanation for this can come from the nature of syntactic extensions and programming styles. Every programmer has his/her own coding style, which either includes using syntactic sugar introduced by certain extensions, or not. However, if the programmer does use some kind of syntax sugar, then they will always use it. Moreover, the extensions of GHC introduce syntactic sugar for very commonly used language constructs, such as \pilcode{case} and if \pilcode{if} statements, or pattern matching. As a consequence, the language extensions enabling these alternative syntactic constructs less frequently become redundant.
+	
+	\section{Limitations}
+	
+	As mentioned in Section~\ref{extension-categories}, \ext{CPP} and \ext{TemplateHaskell} can modify the source code at the time of prepocessing and compilation. In the case of \ext{CPP}, this modification can depend on certain compiler flags, or even on the machine we compile our program on. Regarding \ext{TemplateHaskell}, our code can be generated by arbitrarily complex meta-programs. As a result, the source code of our module can be altered in many different ways. The compiler itself will only get a single variation of the source code, which means, the tool will only be able to analyze one particular version of many possible syntax trees. As a consequence, it can only determine the minimally required extensions in one specific scenario.
+	
+	Currently, the tool will not remove any extensions if either \ext{CPP} or \ext{TemplateHaskell} is used in the module. We tried to partially solve this issue by prioritizing these two extensions during the elimination process. This way, if they are enabled but not used, we can remove them first, then all the other unnecessary extensions. Furthermore, we wanted to provide some information for the user even if those extensions are used, so even in that case the analysis is still performed on the module, and the language elements requiring certain extensions are highlighted.
+
+		
+\end{document}

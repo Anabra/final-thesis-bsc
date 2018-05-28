@@ -1,0 +1,150 @@
+\documentclass[main.tex]{subfiles}
+\begin{document}
+	
+	% style
+	\tikzset{styRectDef/.style = {rectangle, rounded corners, draw=black, inner xsep=3mm, inner ysep=3mm, font = \small}}
+	\tikzcustom{}		
+	
+	\begin{figure}[h]
+		\centering
+		\begin{tikzpicture}[ node distance = 2cm and 4cm, on grid ]
+		
+		\node [styRectGy] (ML)                      {\ext{MonoLocalBinds}};
+		\node [styRectGy] (TO) [above left =of ML]  {\ext{TypeOperators}};
+		\node [styRectGy] (TF) [above =of ML]       {\ext{TypeFamilies}};
+		\node [styRectGy] (TD) [above =of TF]       {\ext{TypeFamilyDependencies}};
+		\node [styRectGy] (KS) [right =of ML]       {\ext{KindSignatures}};
+		\node [styRectGy] (EN) [left  =of ML]       {\ext{ExplicitNameSpaces}};
+		\node [styRectGy] (GA) [below =of ML]       {\ext{GADTs}};
+		\node [styRectGy] (GS) [right =of GA]       {\ext{GADTSyntax}};
+		\node [styRectGy] (PK) [above =of KS]       {\ext{PolyKinds}};
+		\node [styRectGy] (TT) [above =of PK]       {\ext{TypeInType}};
+		\node [styRectGy] (DK) [below right =of TT] {\ext{DataKinds}};
+		
+		\tikzset{every node/.style={fill=white}}
+		\tikzset{every node/.style={fill=white}}
+		\path (TD) edge [styConn] (TF)
+					(TF) edge [styConn] (EN)
+					(TF) edge [styConn] (ML)
+					(GA) edge [styConn] (EN)
+					(GA) edge [styConn] (ML)
+					(GA) edge [styConn] (GS)
+					(TO) edge [styConn] (EN)
+					(TT) edge [styConn] (PK)
+					(TT) edge [styConn] (DK)
+					(PK) edge [styConn] (KS)
+					(TF) edge [styConn] (KS);
+		
+		\end{tikzpicture}
+		\caption{\ext{ExplicitNameSpaces} subgroup}
+		\label{fig:explicit-namespaces-dag}
+	\end{figure}
+	
+	\begin{figure}[h]
+		\centering
+		\begin{tikzpicture}[ node distance = 2cm and 1.7cm, on grid]
+		
+		\tikzset{styRectDef/.style = {rectangle, rounded corners, draw=black, inner xsep=1.5mm, inner ysep=3mm, font = \small}}
+		
+		\node[styRectGy] (EF)                      {\ext{ExplicitForAll}};
+		\node[styRectGy] (RN) [below right =of EF] {\ext{RankNTypes}};
+		\node[styRectGy] (IT) [below =of RN]       {\ext{ImpredicativeTypes}};
+		\node[styRectGy] (ST) [below left =of EF]  {\ext{ScopedTypeVariables}};
+		\node[styRectGy] (LT) [left =4.6cm of ST]  {\ext{LiberalTypeSynonyms}};
+		\node[styRectGy] (EQ) [right =4.2cm of RN] {\ext{ExistentialQuantification}};
+		
+		\path (LT) edge [styConn, relative=false,in=180,out=50] (EF)
+					(ST) edge [styConn] (EF)
+					(RN) edge [styConn] (EF)
+					(EQ) edge [styConn, relative=false,in=0,out=120] (EF)
+					(IT) edge [styConn] (RN);
+		
+		\end{tikzpicture}
+		\caption{\ext{ExplicitForall} subgroup}
+		\label{fig:explicit-forall-dag}
+	\end{figure}
+	
+	\begin{figure}[h]
+		\centering
+		\begin{tikzpicture}[ node distance = 2cm and 2cm, on grid ]
+		
+		\node[styRectGy] (DT) 										 {\ext{DeriveTraversable}};
+		\node[styRectGy] (FU) [below right =of DT] {\ext{DeriveFunctor}};
+		\node[styRectGy] (FO) [below left =of DT]  {\ext{DeriveFoldable}};
+		
+		\node[styRectGy] (AD) [right =6cm of DT]   {\ext{AutoDeriveTypeable}};
+		\node[styRectGy] (DD) [below =of AD]    	{\ext{DeriveDataTypeable}};
+		
+		\path (DT) edge [styConn] (FO)
+		(DT) edge [styConn] (FU)
+		(AD) edge [styConn] (DD);
+		
+		\end{tikzpicture}
+		\caption{Deriving extensions subgroup}
+		\label{fig:derivings-dag}
+	\end{figure}
+	
+	\begin{figure}[h]
+		\centering
+		\begin{tikzpicture}[ node distance = 2cm and 6cm, on grid ]
+		
+		\node[styRectGy] (FI) 							 {\ext{FlexibleInstances}};
+		\node[styRectGy] (TS) [right =of FI] {\ext{TypeSynonymInstances}};
+		
+		\node[styRectGy] (FD) [below left =2cm and 3cm of FI] {\ext{FunctionalDependencies}};
+		\node[styRectGy] (MT) [right =of FD] {\ext{MultiParamTypeClasses}};
+		\node[styRectGy] (CC) [right =of MT] {\ext{ConstrainedClassMethods}};
+		
+		\path (FI) edge [styConn] (TS)
+		(FD) edge [styConn] (MT)
+		(MT) edge [styConn] (CC);
+		
+		\end{tikzpicture}
+		\caption{Type class related extensions subgroup}
+		\label{fig:type-class-dag}
+	\end{figure}
+	
+	\begin{figure}[h]
+		\centering
+		\begin{tikzpicture}[ node distance = 2cm and 2.5cm, on grid ]
+		
+		\node[styRectGy] (DR) 										 {\ext{DisambiguateRecordFields}};
+		\node[styRectGy] (RW) [below right =of DR] {\ext{RecordWildCards}};
+		\node[styRectGy] (DF) [below left =of DR]  {\ext{DuplicateRecordFields}};
+		
+		\path (RW) edge [styConn] (DR)
+		(DF) edge [styConn] (DR);
+		
+		\end{tikzpicture}
+		\caption{\ext{DisambiguateRecordFields} subgroup}
+		\label{fig:disambig-rec-dag}
+	\end{figure}
+	
+	\begin{figure}[h]
+		\centering
+		\begin{tikzpicture}[ node distance = 2cm and 6cm, on grid ]
+		
+		\node[styRectGy] (TH)                {\ext{TemplateHaskell}};
+		\node[styRectGy] (TQ) [below =of TH] {\ext{TemplateHaskellQuotes}};
+		
+		\node[styRectGy] (PA) [below =of TQ] {\ext{ParallelArrays}};
+		\node[styRectGy] (PL) [below =of PA] {\ext{ParallelListComp}};
+		
+		\node[styRectGy] (JS) [right =of TH] {\ext{JavaScriptFFI}};
+		\node[styRectGy] (IF) [below =of JS] {\ext{InterruptibleFFI}};
+		
+		\node[styRectGy] (ST) [below =of IF] {\ext{Strict}};
+		\node[styRectGy] (SD) [below =of ST] {\ext{StrictData}};
+		
+		\path (TH) edge [styConn] (TQ)
+		(PA) edge [styConn] (PL)
+		(JS) edge [styConn] (IF)
+		(ST) edge [styConn] (SD);
+		
+		\end{tikzpicture}
+		\caption{Other implication subgroups}
+		\label{fig:others-dag}
+	\end{figure}
+		
+	
+\end{document}

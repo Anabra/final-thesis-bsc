@@ -1,0 +1,176 @@
+\documentclass[main.tex]{subfiles}
+\begin{document}
+	
+	% examples for complications
+	% not only for GHC extensions, but for any
+	
+	In the following sections, we will discuss the methodology of the extension eliminating process. After presenting a general overview of the whole algorithm, the several phases of the computation will be described in detail. The phases will be introduced in their respective order, and their functionalities will be demonstrated using concrete examples.
+	
+	\section{General overview}
+	
+	The algorithm presented in this \paper{} uses the type-annotated syntax tree provided by Haskell-Tools. It has four main components. The first one consists of the individual extension checkers. These checkers calculate so-called \emph{extension formulas} for the nodes in the syntax tree. Each checker only analyzes those type of nodes, that can potentially require the corresponding language extension. For example, the \chk{MagicHashChecker}, which allows the \texttt{\#} character as a postfix modifier on identifiers, literals and kinds, needs to inspect those respective types of nodes. These checking mechanics can be implemented independently of each other. Essentially, we define certain node types that the extension checker will analyze during the traversal of the syntax tree. When a certain type of node is encountered, the algorithm will run all corresponding checks of all extension checkers. Using a general traversal method, the algorithm only has to visit each node a single time, traversing the whole tree just once.
+	
+	The extension formulas calculated by the checkers are annotated with \emph{certainty levels}. In basic terms, they indicate how much confidence we have in the correctness of the calculated formulas. Certainty levels add another layer of extra information on top of formulas. Using this additional information, we can evaluate the formulas in a broader context. The second component is responsible for deciding which formulas should the algorithm take into consideration based on the certainty levels. For example, the user can choose to ignore all extension formulas below a given certainty level, which might help the algorithm minimize the final extension set. However, the algorithm is also more likely to give false positive results, that is it can remove necessary extensions. It is important to note that the second component also acts as the first configuration entry point for the algorithm.
+	
+	It is the third component's task to evaluate the previously calculated extension formulas. As described in Section~\ref{sat-solver}, a satisfiability problem solver will be used to fulfill this duty.
+	
+	Finally, the last component will rank all possible solutions based on a \emph{complexity function}. The complexity function is used to describe how complex a given extension is. As another configuration entry point, the user can specify his/her own complexity function, and feed it into the algorithm.
+	
+	%NOTE: THIS IS REALLY IMPORTANT!!!
+	As it can be seen, the compiler-specific individual extension checking is very well separated from the more general phases of the algorithm. This means, that our approach of constructing and solving extension formulas can be adopted to any other compiler, so long as the individual checkers are defined. Moreover, if any new extensions are introduced by GHC, they can easily fit into this general model. We only have to define a checker for it, and the relations it has with other existing extensions.
+	
+	An overview of the whole algorithm can be seen on Figure~\ref{fig:algo-proc}. The nodes in the diagram illustrate the information different phases of the algorithm work with; the edges between the nodes represent the phases themselves. On the figure, possible configuration points of the algorithm are marked in italics. Also, certain stages have additional information associated with them, they are indicated by the gray labels.
+	
+	%TODO: remove this from article
+	For a more in-depth examination of the exact specification of some exemplary checkers, see Chapter~\ref{checkers}.
+	
+	
+	\begin{figure}[t] 
+		\centering
+		\subfile{algorithm_process_diag}
+	\end{figure}
+	
+
+	\section{Logical formulae of extensions} \label{extension-formulas}
+	
+	Sometimes it is difficult to determine the exact set of extensions required by a language element. For instance the language element may need a feature which can be enabled by two or more different extensions. In this situation adding any one of these extensions to the module would be sufficient, but the choice would be arbitrary, and the algorithm might end up yielding a larger than minimal extension set. This can be illustrated by the following piece of code. 
+	
+	\begin{codeFloat}[H]
+		\begin{haskell}
+	  class Collection c where
+	    %\colorbox{lightgreen}{type Elem c}%
+	    elements :: c -> [Elem c]
+		  		
+	  genericUnion :: (Collection c1, Collection c2, %\colorbox{lightblue}{Elem c1 ~ Elem c2}%)
+	                  => c1 -> c2 -> [Elem c1]
+	  genericUnion xs ys = elements xs ++ elements ys
+		\end{haskell}
+		\caption{Example for extension ambiguity}
+		\label{code:ext-ambiguity}
+	\end{codeFloat}
+	
+	As we can see, the code uses an associated type called \ilcode{Elem} (highlighted in green), so  it certainly needs \ext{TypeFamilies}. It also utilizes a type equality constraint in the type signature of \ilcode{genericUnion	} (highlighted in blue), which can be enabled by either \ext{TypeFamilies} or \ext{GADTs}. Both extensions support this feature, however, if we chose \ext{GADTs} for allowing the type equality, the final set of extensions would be \pilcode{[~\ext{TypeFamilies},~\ext{GADTs}~]}. We want to keep this set minimal, so in this case turning on \ext{TypeFamilies} is enough: it enables both \emph{associated types} and \emph{type equalities}.
+	
+	\begin{oneLineHaskell}
+		{-# LANGUAGE TypeFamilies #-}
+	\end{oneLineHaskell}
+	
+	Extensions may depend on each other in different ways. They might mutually exclude each other, or certain extensions may require turning on other ones~etc.	We can observe that the connections among various compiler extensions can be very well described using propositional logic. As a general solution, instead of associating a node with a clearly defined set of extensions, we assign a logical formula to the language element in question. The formula can contain atomic variables, which correspond to extensions; and logical operators representing the relations between the extensions. The resulting system of formulas will be processed using a SAT-solver as shown in Section~\ref{sat-solver}
+	
+	Using this approach, we can easily resolve the problem depicted by Program code~\ref{code:ext-ambiguity}. The ambiguity between \ext{TypeFamilies} and \ext{GADTs} induced by the type equality can be represented by the logical disjunction of the two extensions. This means, we will associate the corresponding syntax tree node with the logical formula: $\lvar{TypeFamilies} \lor \lvar{GADTs}$ \footnote{The typesetting of variables deliberately differs from that of extensions, making it clear which one is referred}. As for the associated type \ilcode{Elem}, it can only be used by enabling \ext{TypeFamilies}, thus the formula for that node will contain just a single variable: \lvar{TypeFamilies}.
+	
+	An alternative solution would be to define an "imaginary" extension for type equalities, and replace it later with either \ext{GADTs} or \ext{TypeFamilies}. This solution would work for this special case, but the method described above allows us to more generally solve problems like this. In particular, we want to avoid handling special cases like this individually, and address the issue on a more abstract level.
+	
+	% Both of the formulas above can be satisfied by the interpretation $\{ \lvar{TypeFamilies} = true; \lvar{GADTs} = false  \}$, and we can conclude that the minimal set of extensions required by the code segment is \pilcode{[~\ext{TypeFamilies}~]}. 
+	
+	\section{Levels of certainty} \label{certainty-levels}
+	
+	When analyzing a node in the syntax tree, our algorithm does not only compute the extension formula, but it also assigns a certainty level to it. The certainty level indicates how much confidence we have in the correctness of the formula associated with the node. Currently the algorithm distinguishes three levels of certainty, namely \emph{Evidence}, \emph{MissingInformation} and \emph{Hint}. 
+	
+	A formula is marked as \emph{Evidence} if all required information is present in the node for calculating it. This is the most frequently used certainty level, because most of the time we can exactly determine the extension formula induced by a node. In all the examples in this chapter every formula is considered as \emph{Evidence}, if not explicitly stated otherwise.
+	
+	\emph{MissingInformation} is attributed to a node, when it is carrying insufficient information, but the corresponding formula can be computed approximately. This level is used to explicitly indicate if the information present in the node is partial due to internal reasons. A typical use case for it is when some semantic information is not available during the analysis, because a type or name lookup failed. For example, the \ilcode{lookupName} function is responsible for looking up the type information associated with a node in the syntax tree, and is extensively used by various checkers.
+	
+	\begin{oneLineHaskell}
+		lookupName :: GhcMonad m => Name -> m (Maybe TyThing)
+	\end{oneLineHaskell}
+	
+	\noindent
+	From its type signature, it follows, that the function might fail during the lookup. In such cases, to avoid false positive results, the checkers responsible for analyzing the corresponding piece of code, may still assign certain extension formulas to the given syntax tree node. They will also annotate these formulas with \emph{MissingInformation}, so that in the later phases, the algorithm can choose to either ignore these formulas, or consider them when calculating the final solution.	This certainty level can also be regarded as a fail-safe mechanism which prevents internal errors from boiling up to the user level. 
+	
+	Finally, \emph{Hints} form a middle ground between \emph{Evidence} and \emph{MissingInformation}. They are used when a node might require an extension, but deciding it is not completely obvious. Situations like this may arise if the extensions implied by the node vary depending on its context. For example, one can construct a function whose type requires an extension, but applying it to some arguments might specialize it, so that the extension is no longer needed.
+	
+	Program code~\ref{code:context-sensitivity} illustrates this situation through the \ext{FlexibleContexts} language extension. As we can see, in \ilcode{module A}, \ilcode{f} has type which requires turning on the extension. However, in \ilcode{module B}, \ilcode{f} is applied to an argument, which in turn specializes the type variable in the function's type\footnote{\ext{FlexibleInstances} is needed in order to instantiate \ilcode{class C} for \ilcode{[Char]}}. The expression \ilcode{f 'c'} no longer has a type constraint, so it does not require \ext{FlexibleContexts}. 
+		
+	\noindent
+	\begin{codeFloat}[H]
+		\begin{minipage}{0.47\textwidth}
+			\begin{haskell}
+				{-# LANGUAGE FlexibleContexts #-}
+				module A where
+				
+				class C a where
+				
+				f :: C [a] => a -> a
+				f = id
+			\end{haskell}
+		\end{minipage}
+		\hfill
+		\begin{minipage}{0.50\textwidth}
+			\begin{haskell}	
+				{-# LANGUAGE FlexibleInstances #-}
+				module B where		
+				import A
+				
+				instance C [Char]
+				
+				g x = f 'c'
+			\end{haskell}
+		\end{minipage}
+	\caption{Example for context sensitivity}
+	\label{code:context-sensitivity}
+	\end{codeFloat}
+	
+	\noindent
+	Unfortunately, the syntax tree provided by Haskell-Tools does not contain type information for subexpressions. This means, we can only inspect the function by itself, while the compiler analyzes the expression as a whole. In order to detect all occurrences of a certain extension, the algorithm has to examine all identifiers in the syntax tree, and analyze their types whether they require the extension. As shown above, this can easily result in false negative results.
+	
+	As an alternative solution, the algorithm will treat differently the formulas calculated from syntax tree nodes whose type might change depending on their context. They will be marked as \emph{Hints}. These nodes not necessarily require any extensions, but they are recorded, and are shown to the user as a warning sign, because minor changes to the source code can put those nodes into a context where they actually require the language extension. As an example, changing the argument of \ilcode{f} in Program~code~\ref{code:context-sensitivity} from the character \ilcode{'c'} to the variable \ilcode{x} will make \ext{FlexibleContexts} required. By showing hints to the user, we can warn them to treat similar language elements with special care.
+	
+	After all extension formulas and their certainty levels are evaluated, the algorithm decides which formulas it should consider for calculating the minimal extension set. These decisions are based on certain policies defined by the user, who can specify how the algorithm should treat each certainty level. For example, the user can choose to ignore hints, in which case the algorithm will compute the final minimal set using only the formulas of the other two certainty levels. This approach makes it possible to handle exceptional situations in a broader context using \emph{MissingInformation}, and to configure the aggressiveness of the extension removal using \emph{Hints}.
+	
+	\section{Solving the formulas} \label{sat-solver}
+	
+	After calculating the extension formulas, and filtering them based on certainty levels; the next step is to determine the minimal set of extensions the module requires. This can be achieved by solving the conjunction of the previously calculated formulas as a boolean satisfiability problem. Solving a SAT problem means finding an interpretation (i.e.: a mapping of variables to boolean values), which satisfies the given formula. Assigning \textit{true} to a variable means that the corresponding language extension is required, and will potentially be a member of the final minimal set. In the following sections, we will refer to the extension variables in the satisfying interpretations mapped to the logical value \emph{true} as the solution of the formula. We will demonstrate how the solutions are computed on the following example.
+	
+	\begin{codeFloat}[H]
+		\begin{haskell}
+			data %\colorbox{lightred}{Avg (a :: *)}% where
+			   %\colorbox{lightyellow}{Avg :: Int -> a -> Avg a}%
+			
+			genericAvg :: (Collection c,  %\colorbox{lightblue}{Elem c ~ a}%, Num a) => c -> Avg a
+			genericAvg c = Avg (length es) (sum es)
+			  where es = elements c
+		\end{haskell}
+		\caption{Formula solving example}
+		\label{code:sat-solving}
+	\end{codeFloat}
+	
+	The above piece of code calculates the generic average of the elements in a collection, using the \ilcode{Collection} class defined earlier\footnote{For the sake of clarity, the import declarations are omitted} in Program code~\ref{code:ext-ambiguity}. The first thing we notice, is that in the declaration of \ilcode{Avg}, the type variable \pilcode{a} is kind-annotated (highlighted in red). This feature is enabled by \ext{KindSignatures}. Next, \ilcode{Avg} is declared using \emph{generalized algebraic data type syntax} (highlighted in yellow), which requires the corresponding language extension, \ext{GADTSyntax}. Lastly, there is a type equality in the type signature of \ilcode{genericAvg}, which can be enabled by both \ext{GADTs} and \ext{TypeFamilies}. The resulting formula system can be seen below.
+	
+	\begin{align*}
+		\Big\{ \{\lvar{KindSignatures}\}, \{\lvar{GADTSyntax}\}, \{\lvar{GADTs}~\lor~\lvar{TypeFamilies}\} \Big\}
+	\end{align*}
+	
+	In order to satisfy all elements of the system, \lvar{KindSignatures} and \lvar{GADTSyntax} must be \emph{true}. As for the last formula, we have three options. We can enable either two of the extensions, or both of them. This means, the system has three distinct solutions in total.
+	
+	\begin{gather}
+		\Big\{ \lvar{KindSignatures}, \lvar{GADTSyntax}, \lvar{GADTs} \Big\} \label{eq:set-GADTs} \\
+		\Big\{ \lvar{KindSignatures}, \lvar{GADTSyntax}, \lvar{TypeFamilies} \Big\} \label{eq:set-TypeFamilies} \\
+		\Big\{ \lvar{KindSignatures}, \lvar{GADTSyntax}, \lvar{GADTs}, \lvar{TypeFamilies} \Big\} \label{eq:set-both}
+	\end{gather}
+	
+	Our approach is designed in a way to handle any system of extensions, regardless of compiler. The algorithm defined here can effectively deal with any relations of extensions, as long as the resulting formulas are solvable. Since the input of the SAT-solver is only a conjunction of the subformulas calculated from the nodes, the satisfiability of the problem is solely dependent on the complexity of the extension formulas we allow. This complexity is determined by the information carried by the given node and the possible relations between the extensions.
+	
+	In practice, constructing an extension set for a module is always possible, since the program has been successfully compiled. However, theoretically, extensions can form a very complicated network of relations, in which case, it is also entirely possible to generate an unsolvable formula system. % if the individual checkers calculate contradicting extension formulas.
+	
+	Fortunately, the current extensions supported by GHC have a simple implication network, that can be represented by a group of directed acyclic graphs, as discussed in Section~\ref{relations-of-extensions}. Furthermore, there are no exclusion relations\footnote{An exclusion relation between two extensions means, that turning on either of the two requires turning off the other} among the extensions we investigate; which means, we can also avoid negating variables. From here, it can be shown, that any formula associated with a syntax tree node will contain only disjunctions and conjunctions of extension variables, hence it will always have at least one solution. Using the SAT-solver, we calculate all possible solutions to the given formula system.
+	
+	\section{Ranking the possible solutions} \label{ranking-solutions}
+	
+	The last phase of the algorithm consists of two smaller subphases. Since they are closely related and work with the same type of data, namely sets of extensions, they will be discussed together.	The goal of these phases is to find a minimal extension set among all the possible solutions. The first step is to minimize each solution by iteratively removing implied extensions until they reach a fixed point, where any two extensions in the set are independent. The resulting sets are minimal in the sense, that all extensions they contain are necessary. It is important to note, that these sets are independent of each other, and one can contain an extension not present in another. Moreover, sets are only minimal individually. 
+	
+	As an illustrating example, we will minimize the extension sets (\ref{eq:set-GADTs})--(\ref{eq:set-both}) calculated from Program~code~\ref{code:sat-solving}. The reductions are performed using the implication relations of the extension as shown in Figure~\ref{fig:explicit-namespaces-dag}. The reduced sets can be seen below in their respective order.
+	
+	\begin{gather}
+		\Big\{ \lvar{KindSignatures}, \lvar{GADTs} \Big\} \label{eq:reduced-set-GADTs} \\
+		\Big\{ \lvar{GADTSyntax}, \lvar{TypeFamilies} \Big\} \label{eq:reduced-set-TypeFamilies} \\
+		\Big\{ \lvar{GADTs}, \lvar{TypeFamilies} \Big\} \label{eq:reduced-set-both}
+	\end{gather}
+	
+	As the final step, the algorithm ranks the minimal extension sets based on a \emph{complexity function}, which assigns a real number to every extension. Hence, the complexity of a set is defined as the sum of complexities of the contained extensions. The complexity function can be any real-valued function, but as its name suggests it should describe how complex a given extension is. A trivial implementation could be any positive constant function. In this case the algorithm would find the set with the least number of extensions. A more accurate metric can be the number of extensions the argument of the function implies. Using the second variant we can more precisely approximate how much functionality a certain extension provides.
+	
+	Based on the trivial implementation, the algorithm could choose any one of the sets~(\ref{eq:reduced-set-GADTs})--(\ref{eq:reduced-set-both}), since all of them contain the same number of extensions. However, using the second variant of the complexity function, while the first two sets would still have same complexities (4), the third one would have a higher complexity of 6. From these values, the algorithm can only select either set~(\ref{eq:reduced-set-GADTs}) or (\ref{eq:reduced-set-TypeFamilies}) as the final solution. Either of the first two sets are strictly better choices than the last one, since they contain simpler extensions. By using a more precise complexity function, we were able to find a more sophisticated solution.
+	
+	The complexity function also makes the algorithm configurable from outside, which means the implemented tool can provide a highly customizable interface for its user. For example, if the user would like to port their codebase to a different compiler, or to a different version of GHC; they could assign low values for extensions already supported by the target platform, so the algorithm would prefer those extensions over other ones.
+		
+\end{document}

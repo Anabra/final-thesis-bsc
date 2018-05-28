@@ -1,0 +1,11 @@
+\documentclass[main.tex]{subfiles}
+\begin{document}
+	
+	Some compilers of other languages like \pilcode{C} or \pilcode{C++} also support certain language extensions. For instance, the GNU C compiler~\cite{gnu-docs} offers several new features for the language. It also has a compiler flag that can determine which extensions are used in the program. Since most of these language extensions require using macros, or predefined functions, checking whether they are actually used can be determined at the time of preprocessing. However, for a few of these extensions like nested functions00, a simple syntactical analysis is required. Furthermore, these extensions cannot be enabled or disabled by the user, they come with the compiler by default.
+	
+	As for Haskell, there are only a few tools that can help programmers eliminate unused language extensions. GHC can only determine if a certain extension is needed, but is not enabled. In this case, the compilation fails, and the compiler shows an error message. Unfortunately, GHC only reports the first few missing extensions, and then it instantaneously aborts compilation. So collecting the extensions from the error messages is not an option.
+	
+	There is only a single tool which made an attempt at solving the extension elimination problem. This tool is called HLint~\cite{hlint-bib}. HLint is a linter for Haskell, which can suggest possible improvements to the source code. The tool operates in a purely syntactic way. It uses \pilcode{haskell-src-exts}~\cite{haskell-src-exts} to parse the Haskell source code, then it looks for patterns in the syntax tree to identify code smells, reduce code duplication or even find unnecessary language extensions. However, since the tool only has access to syntactic information, it cannot say anything about extensions requiring semantic analysis.
+	
+	
+\end{document}

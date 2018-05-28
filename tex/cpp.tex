@@ -1,0 +1,8 @@
+\documentclass[main.tex]{subfiles}
+\begin{document}
+	
+	\ext{CPP} is unique language extension. It allows for prerpocessing Haskell source files using the C preprocessor. This extension falls neither into the category of syntactic, nor into the category of semantic extensions. The effect it has on the module is determined before the compilation, in the preprocessing phase. Moreover, the compiler will only see the preprocessed source code, which means we cannot determine the necessity of \ext{CPP} using our standard techniques of syntactic and semantic checking of the abstract syntax tree.
+	
+	Fortunately, GHC stores the preprocessed modules even after compilation. The checker for \ext{CPP} uses the preprocessed source file to determine whether the extension is needed. Currently, it operates in a very crude way. It compares the preprocessed source file and the original one, and if they are identical, then it deems \ext{CPP} unnecessary.
+	
+\end{document}

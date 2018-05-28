@@ -1,0 +1,73 @@
+\documentclass[main.tex]{subfiles}
+\begin{document}
+	
+	% style
+	\tikzset{styRectDef/.style = {rectangle, rounded corners, draw=black, inner xsep=3mm, inner ysep=3mm, font = \small, very thick}}
+	\tikzpackages{}		
+	
+	\begin{figure}[H]
+		\centering
+		\begin{tikzpicture}[ node distance = 4cm and 4cm, on grid ]
+		
+		\node [styPackageGy] (cli) 
+		{ \Large\pilcode{cli} 
+			\nodepart{two}
+			\begin{varwidth}{\linewidth}
+				\begin{itemize}[leftmargin=*]
+					\item user-level entry point
+				\end{itemize}
+			\end{varwidth}
+		};
+		
+		\node [styPackageGy] (daemon) [ below =of cli ]
+		{ \Large\pilcode{daemon} 
+			\nodepart{two}
+			\begin{varwidth}{\linewidth}
+			\begin{itemize}[leftmargin=*]
+			\item main server loop
+			\item package managment
+			\end{itemize}
+			\end{varwidth}
+		};
+		
+		\node [styPackageGy] (builtin-refactorings) [ below left =of daemon ]
+		{ \Large\pilcode{builtin-refactorings} 
+			\nodepart{two}
+			\begin{varwidth}{\linewidth}
+			\begin{itemize}[leftmargin=*]
+			\item predefined refactorings
+			\end{itemize}
+			\end{varwidth}
+		};
+		
+		\node [styPackageGy] (refact) [ below right =of daemon ]
+		{ \Large\pilcode{refact} 
+			\nodepart{two}
+			\begin{varwidth}{\linewidth}
+			\end{varwidth}
+		};
+		
+		\node [styPackageGy] (pretty-print) 
+		[ below = 2cm of {$(builtin-refactorings)!0.5!(refact)$} ]
+		{ \Large\pilcode{pretty-print} 
+			\nodepart{two}
+			\begin{varwidth}{\linewidth}
+			\end{varwidth}
+		};
+		
+		\tikzset{every node/.style={fill=white}}
+		\draw[styConn] (cli) -- (daemon);
+		\draw[styConn] (cli) -| (builtin-refactorings);
+		\draw[styConn] (cli) -| (refact);
+		
+		\draw[styConn] (daemon) |- ++(-4,-2) -- (builtin-refactorings);
+		\draw[styConn] (daemon) |- ++( 4,-2) -- (refact);
+		\draw[styConn] (daemon) -- (pretty-print);
+
+		
+		\end{tikzpicture}
+		\caption{\pilcode{cli} package diagram}
+		\label{fig:cli-package-diagram}
+	\end{figure}
+	
+\end{document}

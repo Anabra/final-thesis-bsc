@@ -1,0 +1,24 @@
+\documentclass[main.tex]{subfiles}
+\begin{document}
+	
+	This chapter is dedicated to discuss the specification of the extension eliminating refactoring. The program has to accomplish two main objectives: remove all unnecessary extensions from a given module/project and highlight all the language elements requiring the remaining extensions. The two main functionalities of the program should be to identify the language elements requiring certain extensions, and then, after collecting all available information, determine the final extension set for the module. The first task should be covered by so-called \emph{extension checkers} and the second one should be carried out by a separate \emph{minimizing algorithm}.
+	
+	\section{Individual checkers}
+	
+	The individual extension checkers are responsible for determining whether a certain language element requires a given extension. Each checker is responsible for determining the necessity of a single extension. Their input is a node of the AST, and their output should be the same node, but in a computational context where we store the required language extensions. A checker will analyze the node and if it needs the given extension, it will modify the context, so that it will contain information about both the extension and its location.
+	
+	Another important property of the checkers to mention, is that they should be completely independent of each other. Every single one of them has a single task: determine whether a node requires a given extension. Furthermore the checkers should not depend on the traversal of the syntax tree in any way. This means, the traversal can be specified independently of the checkers, and its implementation can be modified at any time. As a result, we can freely experiment with several different implementations of the syntax tree traversal, and more easily find the one that suits our needs.
+	
+	To summarize, the individual checkers perform analysis on the abstract syntax tree nodes, and are checking the necessity of \emph{specific} language extensions. As a consequence of these two factors, they are \textbf{compiler specific}, because both the structure of the syntax tree and the specification of the extension are determined by the compiler.
+	
+	\section{Minimizing algorithm}
+	
+	The minimizing algorithm collects all the information calculated by the checkers, and the determines a minimal extension set for the module. It should be completely compiler independent, and should work for any hierarchy of extensions with potentially arbitrarily complex relations between them. The input of the algorithm will be a set of extension formulas associated with certainty levels and location information (more on these in Chapter~\ref{algorithm}). The output of it should be a minimal set of extensions required by the module. The minimality of the set is defined by the overall complexities of the contained extensions. The complexity of an extension is determined by a parameterizable complexity function. An extension set is considered minimal, if its complexity is minimal.
+	
+	\section{Processing the results}
+	
+	The calculated results of both the checkers and the minimizing algorithm will processed inside Haskell-Tools. The final extension set should be used to define a refactoring which removes all unnecessary extensions from a module. The input of the refactoring will be a complete module, and its output will be the same module with modified \pilcode{LANGUAGE} pragmas: only the elements of the final extension set will be enabled. A project-wide alternative of the same refactoring will also be implemented 
+	
+	The extension formulas calculated by the checkers have location information associated with them. This means, we can highlight the language elements in the module requiring the remaining extensions. So, module level query should be defined, which marks all language elements that require at least one extension. Hovering over them in the editor should display the corresponding extension(s).
+	
+\end{document}

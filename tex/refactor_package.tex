@@ -1,0 +1,83 @@
+\documentclass[main.tex]{subfiles}
+\begin{document}
+	
+	% style
+	\tikzset{styRectDef/.style = {rectangle, rounded corners, draw=black, inner xsep=3mm, inner ysep=3mm, font = \small, very thick}}
+	\tikzpackages{}		
+	
+	\begin{figure}[H]
+		\centering
+		\begin{tikzpicture}[ node distance = 4cm and 4cm, on grid ]
+		
+		\node [styPackageGy] (refact) 
+		{ \Large\pilcode{refact} 
+			\nodepart{two}
+			\begin{varwidth}{\linewidth}
+				\begin{itemize}[leftmargin=*]
+					\item loads modules
+					\item performs refactorings
+					\item utilities
+				\end{itemize}
+			\end{varwidth}
+		};
+		
+		\node [styPackageGy] (rewrite) [ below right =of refact ]
+		{ \Large\pilcode{rewrite} 
+			\nodepart{two}
+			\begin{varwidth}{\linewidth}
+			\begin{itemize}[leftmargin=*]
+			\item pattern matching on AST
+			\item creating new nodes
+			\end{itemize}
+			\end{varwidth}
+		};
+		
+		\node [styPackageGy] (pretty-print) [ below =of rewrite ]
+		{ \Large\pilcode{pretty-print} 
+			\nodepart{two}
+			\begin{varwidth}{\linewidth}
+			\begin{itemize}[leftmargin=*]
+			\item pretty printing
+			\item source related info addition
+			\end{itemize}
+			\end{varwidth}
+		};
+		
+		\node [styPackageGy] (backend-ghc) [ left =of {$(rewrite)!0.5!(pretty-print)$} ]
+		{ \Large\pilcode{backend-ghc} 
+			\nodepart{two}
+			\begin{varwidth}{\linewidth}
+			\begin{itemize}[leftmargin=*]
+			\item AST transformation
+			\item type info addition
+			\end{itemize}
+			\end{varwidth}
+		};
+		
+		\node [styPackageGy] (ast) [ below left =of pretty-print ]
+		{ \Large\pilcode{ast} 
+			\nodepart{two}
+			\begin{varwidth}{\linewidth}
+			\begin{itemize}[leftmargin=*]
+			\item repr. of AST
+			\item repr. of semantic info
+			\item repr. of source related info
+			\end{itemize}
+			\end{varwidth}
+		};
+
+		\tikzset{every node/.style={fill=white}}
+		\draw[styConn] (refact) |- ++(-2.2,-2) -- (backend-ghc);
+		\draw[styConn] (refact) |- ++(4,-2)    -- (rewrite);
+		\draw[styConn] (refact) -- ++(7.5,0)  -- ++(0,-8)  --  (pretty-print);
+		\draw[styConn] (refact) -- ++(-5,0) -- ++(0,-12) --  (ast);
+		\draw[styConn] (rewrite) -- (pretty-print);
+		\draw[styConn] (backend-ghc)  |- ++(2.2,-3.8) -- (ast);
+		\draw[styConn] (pretty-print) |- ++(-4,-1.8) -- (ast);
+		
+		\end{tikzpicture}
+		\caption{\pilcode{refactor} package diagram}
+		\label{fig:refact-package-diagram}
+	\end{figure}
+	
+\end{document}

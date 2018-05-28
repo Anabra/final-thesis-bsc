@@ -1,0 +1,53 @@
+\documentclass[main.tex]{subfiles}
+\begin{document}
+	
+	In Haskell types can have contexts associated with them. These contexts constrain the possible values the type can be instantiated with.
+	
+	\begin{oneLineHaskell}
+		elem :: Eq a => a -> [a] -> Bool
+	\end{oneLineHaskell}
+	
+	In the above example the function \ilcode{elem} only works on types satisfying the \ilcode{Eq} constraint, i.e. they have an equality operation defined on them. In Haskell 98 we can only define such constraints that have only type variable arguments. So the following type signature is illegal:
+	
+	\begin{oneLineHaskell}
+		listEq :: Eq [a] => [a] -> [a] -> Bool
+	\end{oneLineHaskell}
+	
+	Enabling \ext{FlexibleContexts} lifts this restriction, and allows users to define more complex constraints. More precisely \ext{FlexibleContexts} have to be enabled, if there are any bindings in the module whose left hand-side has type in which there is a type class constraint, and at least one of its type arguments does not have a type variable head. 
+	
+	This also applies to any element of the abstract syntax tree that is explicitly type annotated. Note that the constraint must be a type class constraint. The rule above neither applies to equality constraints, nor to type family applications of result kind \ilcode{Constraint}. It is also worth emphasizing that there may not be any syntactic evidence of such complex constraints, and the extension might still have to be enabled. Program~code~\ref{code:flexible-contexts-inferred} illustrates this situation.
+	
+	\begin{codeFloat}
+		\noindent
+		\begin{minipage}{0.47\textwidth}
+			\begin{haskell}
+				{-# LANGUAGE FlexibleContexts #-}
+				module A where
+				
+				class C a where
+				
+				f :: C [a] => a -> a
+				f = id
+			\end{haskell}
+		\end{minipage}
+		\hfill
+		\begin{minipage}{0.50\textwidth}
+			\begin{haskell}	
+				{-# LANGUAGE FlexibleContexts #-}
+				module B where	
+					
+				import A
+								
+				
+				g x = f x
+			\end{haskell}
+		\end{minipage}
+		\caption{Inferred type requiring \ext{FlexibleContexts}}
+		\label{code:flexible-contexts-inferred}
+	\end{codeFloat}
+
+	As we can see, in \ilcode{module A}, \ilcode{f} has type which requires \ext{FlexibleContexts}. This function is imported into \ilcode{module B} and is used in such a way, that \ilcode{g}'s inferred type will also require the extension. This is a very simplified example, but in practice, many similar situations arise regularly.
+	
+	As explained earlier, all bindings whose left hand-side have type in which there is a type class constraint, and at least one of its type arguments does not have a type variable head will be considered as evidence for the necessity of \ext{FlexibleContexts}. However, such identifiers on the \textbf{right-hand} sides of bindings not necessarily require \ext{FlexilbeContexts}, so we can only give hints about them. More precisely, those identifiers whose type requires \ext{FlexibleContexts}, but stand on the right-hand side of a binding, will only be considered as hints for the necessity of \ext{FlexibleContexts}.
+		
+\end{document}
