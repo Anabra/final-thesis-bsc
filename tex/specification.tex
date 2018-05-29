@@ -1,24 +1,36 @@
 \documentclass[main.tex]{subfiles}
 \begin{document}
 	
-	This chapter is dedicated to discuss the specification of the extension eliminating refactoring. The program has to accomplish two main objectives: remove all unnecessary extensions from a given module/project and highlight all the language elements requiring the remaining extensions. The two main functionalities of the program should be to identify the language elements requiring certain extensions, and then, after collecting all available information, determine the final extension set for the module. The first task should be covered by so-called \emph{extension checkers} and the second one should be carried out by a separate \emph{minimizing algorithm}.
+	In this chapter we will outline the main aspects of the implemented software. First, a general specification of the extension elimination problem will be discussed, then we will review the currently existing methods and tools, and finally, we will specify the exact requirements the program should comply to.
 	
-	\section{Individual checkers}
+	\section{Problem specification}
 	
-	The individual extension checkers are responsible for determining whether a certain language element requires a given extension. Each checker is responsible for determining the necessity of a single extension. Their input is a node of the AST, and their output should be the same node, but in a computational context where we store the required language extensions. A checker will analyze the node and if it needs the given extension, it will modify the context, so that it will contain information about both the extension and its location.
+	In order to eliminate all unnecessary extensions from a module, first we must define what \emph{unnecessary} exactly means. First and foremost, after removing an \emph{unnecessary} extension from our module, we want our program to behave exactly as it did before. To be more specific, we want the refactored program to be semantically equivalent to the original one. A relatively convenient way to check this, is to determine whether every single language element in the module has the exact same type as before the refactoring. So, given a module compiles with and without a certain language extension, we deem the extension \emph{unnecessary}, if and only if removing it has no effect on the calculated types of the language elements present in module.
 	
-	Another important property of the checkers to mention, is that they should be completely independent of each other. Every single one of them has a single task: determine whether a node requires a given extension. Furthermore the checkers should not depend on the traversal of the syntax tree in any way. This means, the traversal can be specified independently of the checkers, and its implementation can be modified at any time. As a result, we can freely experiment with several different implementations of the syntax tree traversal, and more easily find the one that suits our needs.
+	It is also important to define when does a given language element require a certain extension. We can only give a relatively vague definition in the general case: we say that a language element requires a certain extension, if only if it uses at least one feature enabled by the extension. Also, we want to determine the minimal language element requiring the extension. So, in the example below, we want to only find the highlighted code segment for \ext{ViewPatterns}, and not say, the entire function definition.
 	
-	To summarize, the individual checkers perform analysis on the abstract syntax tree nodes, and are checking the necessity of \emph{specific} language extensions. As a consequence of these two factors, they are \textbf{compiler specific}, because both the structure of the syntax tree and the specification of the extension are determined by the compiler.
+	\vspace{-0.3cm}
+	\begin{haskell}
+		repeatHead  %\colorbox{lightblue}{(safeHead -> Just x)}% = repeat x
+		repeatHead = []
+	\end{haskell}
 	
-	\section{Minimizing algorithm}
+	Using the above two definitions, we can define the exact specifications of our software. The implemented program should be able to remove all unnecessary extensions from a Haskell module, as well as highlight all language elements requiring at least one extension.
 	
-	The minimizing algorithm collects all the information calculated by the checkers, and the determines a minimal extension set for the module. It should be completely compiler independent, and should work for any hierarchy of extensions with potentially arbitrarily complex relations between them. The input of the algorithm will be a set of extension formulas associated with certainty levels and location information (more on these in Chapter~\ref{algorithm}). The output of it should be a minimal set of extensions required by the module. The minimality of the set is defined by the overall complexities of the contained extensions. The complexity of an extension is determined by a parameterizable complexity function. An extension set is considered minimal, if its complexity is minimal.
+	\vspace{-0.3cm}
 	
-	\section{Processing the results}
+	\section{State of the art}
 	
-	The calculated results of both the checkers and the minimizing algorithm will processed inside Haskell-Tools. The final extension set should be used to define a refactoring which removes all unnecessary extensions from a module. The input of the refactoring will be a complete module, and its output will be the same module with modified \pilcode{LANGUAGE} pragmas: only the elements of the final extension set will be enabled. A project-wide alternative of the same refactoring will also be implemented 
+	Some compilers of other languages like \pilcode{C} or \pilcode{C++} also support certain language extensions. For instance, the GNU C compiler~\cite{gnu-docs} offers several new features for the language. It also has a compiler flag that can determine which extensions are used in the program. Since most of these language extensions require using macros, or predefined functions, checking whether they are actually used can be determined at the time of preprocessing. However, for a few of these extensions like nested functions, a simple syntactical analysis is required. Furthermore, these extensions cannot be enabled or disabled by the user, they come with the compiler by default.
 	
-	The extension formulas calculated by the checkers have location information associated with them. This means, we can highlight the language elements in the module requiring the remaining extensions. So, module level query should be defined, which marks all language elements that require at least one extension. Hovering over them in the editor should display the corresponding extension(s).
+	As for Haskell, there are only a few tools that can help programmers eliminate unused language extensions. GHC can only determine if a certain extension is needed, but is not enabled. In this case, the compilation fails, and the compiler shows an error message. Unfortunately, GHC only reports the first few missing extensions, and then it instantaneously aborts compilation. So collecting the extensions from the error messages is not an option.
+	
+	There is only a single tool which has support for removing unused extensions. This tool is called HLint~\cite{hlint-bib}. HLint is a linter for Haskell, which can suggest possible source code improvements. The tool operates in a purely syntactic way. It uses \pilcode{haskell-src-exts}~\cite{haskell-src-exts} to parse the Haskell source code, then it looks for patterns in the syntax tree to identify code smells, reduce code duplication or even find unnecessary language extensions. However, since the tool only has access to syntactic information, it cannot say anything about extensions requiring semantic analysis.
+	
+	\vspace{-0.3cm}
+	
+	\section{Requirements specification}
+	
+	The method should be implemented as a program transformation, possibly integrated into a graphical text editor. The user should be able to apply the refactoring to a single module or to a complete Haskell package as well. Applying the refactoring to a module or a project should eliminate all unnecessary extensions from it. A query option should also be implemented which would highlight the language elements in a given module using at least one extension. The latter feature could help programmers identify the reason why a certain extension is enabled, aiding them in the process of manually transforming the source code so that it no longer requires the given extension. The refactoring and the query should be able to handle both syntactic and semantic extensions as well.
 	
 \end{document}

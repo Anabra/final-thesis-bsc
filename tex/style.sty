@@ -47,7 +47,7 @@ right  = 2.5cm]{geometry}
 
 \hypersetup{%
 	colorlinks=true,% hyperlinks will be coloured
-	allcolors=blue,% hyperlink text will be green
+	allcolors=black,% hyperlink text will be green
 }
 
 \newcommand*\Let[2]{\State #1 $\gets$ #2}
@@ -89,7 +89,7 @@ right  = 2.5cm]{geometry}
 
 \PassOptionsToPackage{usenames,dvipsnames,svgnames}{xcolor}  
 \usepackage{tikz}
-\usetikzlibrary{arrows,positioning,automata,calc}
+\usetikzlibrary{arrows,positioning,automata,calc,decorations.markings}
 
 \usepackage{pgfplots}
 \usepackage{tcolorbox}
@@ -215,6 +215,7 @@ right  = 2.5cm]{geometry}
 	
 	\tikzset{styPackageGn/.style = {package, draw=green, fill=green!20}}
 	\tikzset{styPackageBl/.style = {package, draw=cyan, fill=cyan!40}}
+	\tikzset{styPackageLBl/.style = {package, draw=cyan, fill=cyan!20}}
 	\tikzset{styPackageGy/.style = {package, draw=gray, fill=gray!17}}
 	
 	\tikzset

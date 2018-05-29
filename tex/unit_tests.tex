@@ -1,0 +1,118 @@
+\documentclass[main.tex]{subfiles}
+\begin{document}
+	
+	The program is validated by 185 test cases which cover every single implemented extension checker. The test cases are aimed to be minimal, and their purpose should be made clear by their descriptive names. The test cases themselves will only be documented briefly by providing an outline of their testing plan. It is important to note, that there are negative result test cases as well, which test whether the algorithm recognized that the extension is not needed in the given situation. In these test cases, the extension to be checked has to be enabled, even though it is not actually used, because the corresponding checker will perform the analysis only if the extension is turned on. Besides the local annotations, global annotations can be specified as well, to validate the behavior of the eliminating algorithm.
+	
+	\subsection{\ext{RecordWildCardsTest}}
+	
+	Testing the extension's occurrence in expressions and in patterns.
+	
+	\subsection{\ext{FlexibleInstancesTest}}
+	
+	Testing the possible constraint violations for type class isntance declarations, and whether they are recognized through type synonyms.
+	
+	\subsection{\ext{DerivingsTest}}
+	
+	Testing deriving clauses for newtypes, data types, and standalone derivings.
+	
+	\subsection{\ext{PatternSynonymsTest}}
+	
+	Testing the occurrences of uni- and bidirectional pattern synonyms.
+	
+	\subsection{\ext{BangPatternsTest}}
+	
+	Testing the occurrence of the bang pattern in many different places.
+	
+	\subsection{\ext{TemplateHaskellTest}}
+	
+	Testing the presence of quotes and splices.
+	
+	\subsection{\ext{ViewPatternsTest}}
+	
+	Testing the occurrence of view patterns in many different places.
+	
+	\subsection{\ext{LambdaCaseTest}}
+	
+	Testing the occurrence of lambda cases in many different places.
+	
+	\subsection{\ext{TupleSectionsTest}}
+	
+	Testing the occurrence of tuple sections in many different places.
+	
+	\subsection{\ext{MagicHashTest}}
+	
+	Comprehensively testing the occurrence of hash marks in many different places.
+	
+	\subsection{\ext{FunctionalDependenciesTest}}
+	
+	Simple test for the presence of functional dependencies.
+	
+	\subsection{\ext{DefaultSignaturesTest}}
+	
+	Simple test for the presence of default signatures in type classes.
+	
+	\subsection{\ext{RecursiveDoTest}}
+	
+	Testing the presence recursive do syntax.
+	
+	\subsection{\ext{ArrowsTest}}
+	
+	Testing the presence of arrow syntax.
+	
+	\subsection{\ext{ParallelListCompTest}}
+	
+	Testing the occurrence of parallel list comprehensions in many different places.
+	
+	\subsection{\ext{TypeFamiliesTest}}
+	
+	Comprehensive testing for type family related declarations. Also comprehensive testing for the presence of the type equality operator, both for explicit syntactic occurrence and the occurrence in the (potentially inferred) types of language elements.
+	
+	\subsection{\ext{MultiParamTypeClassesTest}}
+	
+	Testing whether a type class has zero or more than one type variables.
+	
+	\subsection{\ext{ConstraintKindsTest}}
+	
+	Tests the explicit and implicit occurrences of the kind \pilcode{Constraint} in kind signatures, or function return types. Also tests the presence of tuple constraints.
+	
+	\subsection{\ext{KindSignaturesTest}}
+	
+	Testing the syntactic occurrence of kind annotations.
+	
+	\subsection{\ext{ExplicitNamespacesTest}}
+	
+	Testing explicit namespace imports and exports.
+	
+	\subsection{\ext{OverloadedStringsTest}}
+	
+	Testing overloaded string literals for type synonyms, newtypes and other definitions.
+	
+	\subsection{\ext{GADTsTest}}
+	
+	Testing the presence of generalized algebraic data type declarations, existentially quantified types, and type equalities. Please note that in some cases \ext{GADTS} and \ext{ExistentialQuantification} can be interchanged, even if it is counter-intuitive.
+	
+	\subsection{\ext{ExistentialQuantification}}
+	
+	Checking the presence of existentially quantified type variables in normal data declarations, and in GADTs as well.
+	
+	\subsection{\ext{ConstrainedClassMethodsTest}}
+	
+	Testing whether a type class function has additional constraints besides the containing type class.
+	
+	\subsection{\ext{MultiWayIfTest}}
+	
+	Testing the presence of multi-way if expressions in many different places.
+	
+	\subsection{\ext{TypeOperatorsTest}}
+	
+	Testing the occurrence of infix data constructor declarations.
+	
+	\subsection{\ext{UndecidableInstancesTest}}
+	
+	Testing the different constraint violations for the decidability of instance declarations, and whether they are recognized through type synonyms well.
+	
+	\subsection{\ext{FlexibleContextsTest}}
+	
+	Testing the constraint violations for types with contexts and whether they are recognized through type synonyms as well.
+	
+\end{document}

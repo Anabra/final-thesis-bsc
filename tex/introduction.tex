@@ -11,4 +11,23 @@
 	
 	Our goal is to implement a tool that can help programmers automatically remove unnecessary extensions from their modules, and also locate the program elements still requiring the remaining language extensions. By highlighting these program elements, developers can more easily understand why a certain extension is needed in their programs.
 	
+	\section{Structure of the \paper{}}
+	
+	This \paper{} can divided into two well separated parts: a user manual and a developer documentation. The user manual is aimed at end users, and it contains information about the installation procedure of the software and a quick guide for the available user interfaces. The developer documentation is for potential contributors of the project, who want to understand the architecture and the inner workings of the software. It discusses the exact specification of the extension elimination problem, proposes an algorithm which solves the problem, describes the architecture of the framework we used to implement the refactoring, and also explains the validation process of the implemented program.
+	
+	Part~\ref{background} can be regarded as the common segment of both the user manual and the developer documentation. It helps to understand the many different language extensions provided by the Glasgow Haskell Compiler, and also hints at the possible complications associated with the extension elimination problem. It is highly recommended for developers, and it is also worth reading for interested users.
+	
+	\vfill
+	
+	\begin{center}
+		\includegraphics[scale=0.25]{human_capacities_logo.png}
+	\end{center}
+	
+	\hspace{3cm}
+	
+	\begin{center}
+		Supported By the ÚNKP-17-1 \\
+		New National Excellence Program of the Ministry of Human Capacities
+	\end{center}
+	
 \end{document}

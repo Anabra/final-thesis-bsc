@@ -18,8 +18,8 @@
 			class Ord (Key a) => IsNode a where
 			%\colorbox{lightgreen}{type Key a :: *}%
 			
-			instance (IsNode a, IsNode b, %\colorbox{lightblue}{Key a ~ Key b}%) => IsNode (Either a b) where
-			type Key (Either a b) = Key a
+			instance (IsNode a, IsNode b, %\colorbox{lightblue}{Key a ~ Key b}%) => IsNode (Either a b) 
+			  where type Key (Either a b) = Key a
 		\end{haskell}
 		\caption{Extension ambiguity in parsec}
 		\label{code:ext-ambiguity-parsec}
@@ -35,9 +35,9 @@
 	
 	\begin{codeFloat}[H]
 		\begin{haskell}
-			data Expr a where
-			Add :: Expr a -> Expr a -> Expr a
-			Mul :: Expr a -> Expr a -> Expr a
+    data Expr a where
+      Add :: Expr a -> Expr a -> Expr a
+      Mul :: Expr a -> Expr a -> Expr a
 		\end{haskell}
 		\caption{\ext{GADTSyntax} example}
 		\label{code:gadt-syntax}

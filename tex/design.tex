@@ -1,0 +1,57 @@
+\documentclass[main.tex]{subfiles}
+\begin{document}
+	
+	This chapter is dedicated to discuss the design of the extension eliminating refactoring. The program has to accomplish two main objectives: remove all unnecessary extensions from a given module/project and highlight all the language elements requiring the remaining extensions. The two main functionalities of the program is to identify the language elements requiring certain extensions, and then, after collecting all available information, determine the final extension set for the module. The first task is covered by so-called \emph{extension checkers} and the second one is carried out by a separate \emph{minimizing algorithm}.
+	
+	\section{Individual checkers} \label{checker-design}
+	
+	The individual extension checkers are responsible for determining whether a certain language element requires a given extension. Each checker is responsible for determining the necessity of a single extension. Their input is a node of the AST, and their output should be the same node, but in a computational context where we store the required language extensions. A checker will analyze the node and if it needs the given extension, it will modify the context, so that it will contain information about both the extension and its location.
+	
+	\subsection{Computational context}
+	
+	Haskell is a \emph{purely} functional programming language. This means, we cannot implicitly modify the state of the program, and cannot perform any side effects without explicitly stating otherwise. However, in many cases it would be advantageous to maintain some sort of state around our computation. In Haskell, this can be achieved by using monads and monad transformers. The latter can be used to stack multiple types of states on each other in our computational context.
+	
+	To determine the exact monad stack to utilize, first we must analyze what kind of state we actually need. As mentioned earlier, we should be able to maintain the extensions collected so far with their corresponding location information. This state will be modified during the elimination process, so we need a mutable context. The well-known \ilcode{State} monad can be used to achieve this kind of behavior with a finite mapping of extensions to (possibly multiple) source locations. We will call this type \ilcode{ExtMap}. A simplified definition of the type is given below.
+	
+	\vspace{-0.2cm}
+	\begin{oneLineHaskell}
+		type ExtMap = Map Extension [Location]
+	\end{oneLineHaskell}
+	
+	We also need to know the extension enabled by default, so we have to maintain an immutable context as well using the \ilcode{Reader} monad which will contain a list of the originally enabled extensions. Finally, we need to interact with the compiler itself, so at the bottom of the stack we will use the \ilcode{Ghc} monad. The \ilcode{Ghc} monad can be used to interact with the compiler. The most important feature of this monad is that it enables looking up types of certain AST nodes. This feature is used exhaustively throughout the extension elimination process. The \ilcode{Ghc} monad is not pure, which means we can only transform it into \ilcode{IO}. The complete monad stack can be seen on Figure~\ref{fig:monad-stack}.
+	
+	\subfile{monad_stack}
+	
+	\subsection{Properties}
+	
+	One of the most important properties of the checkers is that they are completely independent of each other. Every single one of them has a single task: determine whether a node requires a given extension. Furthermore the checkers do not depend on the traversal method of the syntax tree in any way. This means, the traversal can be specified independently of the checkers, and its implementation can be modified at any time. As a result, we can freely experiment with several different implementations of the syntax tree traversal, and more easily find the one that suits our needs.
+	
+	To summarize, the individual checkers perform analysis \textbf{on the abstract syntax tree} nodes, and are checking the necessity of \textbf{specific} language extensions. As a consequence of these two factors, they are compiler specific, because both the structure of the syntax tree and the specification of the extensions are determined by the compiler. More additional details about the checkers will be discussed in Sections~\ref{extension-formulas}~and~\ref{certainty-levels}.
+	
+	\section{Analyzing the syntax tree}
+	
+	Our method performs static code analysis by analyzing the abstract syntax tree of a Haskell program. In this section, we describe the used traversal method, and explain how a certain node can be scrutinized.
+	
+	\subsection{Traversal}
+	
+	As discussed in Section~\ref{checker-design}, the traversal method is entirely independent of the individual checkers. During the development process of the software, we tried three different traversal methods: manual traversal, \pilcode{uniplate} and \pilcode{classy-plate}. The latter two are generic libraries for traversing arbitrarily complex data structures. In essence, both libraries can be utilized in the same way: they need to be provided an arbitrary data structure (even heterogeneous ones, such as an AST), and a type parameter which specifies the substructures to visit. In our special case, they will be handled an AST and a node type, and they will traverse all nodes with the given type. So, for example, we can collect all expressions or function declaration in a given module.
+	
+	Unfortunately \pilcode{uniplate} can only traverse one type of node at a single time, which means we would have to traverse the whole tree twice to collect both expressions and function declarations. This approach does not scale well with the number of different types of nodes. On the other hand, \pilcode{classy-plate} can collect many different types of nodes with a single traversal. Currently, the program uses \pilcode{classy-plate} to traverse the syntax tree.
+	
+	The library also support heterogeneous (even monadic) map-like operations. It can be given many different functions, and it will apply them to the corresponding nodes. The type parameter is inferred from the input type of these functions. As a result, we can simply give the traversal algorithm the individual checkers themselves, and \pilcode{classy-plate} will check all specified nodes while traversing the tree.
+	
+	\subsection{Scrutinizing nodes}
+	
+	Each node in the syntax tree can be scrutinized using pattern-matching. This enables us to write really simple and easy to understand checking functions. A checker can be defined by using a simple pattern match on a given type of node, and by specifying the checking logic.
+	
+	\section{Minimizing algorithm}
+	
+	The minimizing algorithm collects all the information calculated by the checkers, and the determines a minimal extension set for the module. It should be completely compiler independent, and should work for any hierarchy of extensions with potentially arbitrarily complex relations between them. The input of the algorithm will be a set of extension formulas associated with certainty levels and location information (more on these in Chapter~\ref{algorithm}). The output of it should be a minimal set of extensions required by the module. The minimality of the set is defined by the overall complexities of the contained extensions. The complexity of an extension is determined by a parameterizable complexity function. An extension set is considered minimal, if its complexity is minimal.
+	
+	\section{Processing the results}
+	
+	The calculated results of both the checkers and the minimizing algorithm will processed inside Haskell-Tools. The final extension set is used to define a refactoring which removes all unnecessary extensions from a module. The input of the refactoring is a complete module, and its output is the same module with modified \pilcode{LANGUAGE} pragmas. In the new list of pragmas only the elements of the final extension set will be enabled. A project-wide alternative of the same refactoring is also available. 
+	
+	The extension formulas calculated by the checkers have location information associated with them. This means, we can highlight the language elements in the module requiring the remaining extensions. This means, we can define a module level query which marks all language elements that require at least one extension. Hovering over such a language element in the editor will display the corresponding extension(s).
+	
+\end{document}

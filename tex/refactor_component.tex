@@ -2,26 +2,60 @@
 \begin{document}
 	
 	% style
-	\tikzset{styRectDef/.style = {rectangle, rounded corners, draw=black, inner xsep=3mm, inner ysep=3mm, font = \small, very thick}}
+	\tikzset
+	{ styRectDef/.style = 
+		{ rectangle
+		, rounded corners
+		, draw=black
+		, inner xsep=3mm
+		, inner ysep=3mm
+		, font = \small
+		, very thick
+		}
+	}
+	
+	\tikzset
+	{ bigConn/.style = 
+		{ decoration = 
+			{ markings
+			, mark=at position 1 with { \arrow[scale=4,>=stealth]{>} }
+			}
+		, postaction={decorate}
+		, thick
+		, shorten <=1mm
+		, shorten >=1mm
+		}
+	}
 	\tikzpackages{}		
 	
 	\begin{figure}[H]
 		\centering
 		\begin{tikzpicture}[ node distance = 4cm and 4cm, on grid ]
 		
-		\node [styPackageGy] (refact) 
-		{ \Large\pilcode{refact} 
+		\node [styPackageGy] (refactor) 
+		{ \Large\pilcode{refactor} 
 			\nodepart{two}
 			\begin{varwidth}{\linewidth}
 				\begin{itemize}[leftmargin=*]
 					\item loads modules
-					\item performs refactorings
+					\item performs refactororings
 					\item utilities
 				\end{itemize}
 			\end{varwidth}
 		};
 		
-		\node [styPackageGy] (rewrite) [ below right =of refact ]
+		\node [styPackageLBl] (builtin-refactorings) [ above =of refactor ]
+		{ \Large\pilcode{builtin-refactorings} 
+			\nodepart{two}
+			\begin{varwidth}{\linewidth}
+			\begin{itemize}[leftmargin=*]
+			\item \textbf{extension elimination}
+			\item many other predefined refactorings
+			\end{itemize}
+			\end{varwidth}
+		};
+		
+		\node [styPackageGy] (rewrite) [ below right =of refactor ]
 		{ \Large\pilcode{rewrite} 
 			\nodepart{two}
 			\begin{varwidth}{\linewidth}
@@ -67,17 +101,19 @@
 		};
 
 		\tikzset{every node/.style={fill=white}}
-		\draw[styConn] (refact) |- ++(-2.2,-2) -- (backend-ghc);
-		\draw[styConn] (refact) |- ++(4,-2)    -- (rewrite);
-		\draw[styConn] (refact) -- ++(7.5,0)  -- ++(0,-8)  --  (pretty-print);
-		\draw[styConn] (refact) -- ++(-5,0) -- ++(0,-12) --  (ast);
+		\draw[bigConn] (builtin-refactorings) -- (refactor);
+		
+		\draw[styConn] (refactor) |- ++(-2.2,-2) -- (backend-ghc);
+		\draw[styConn] (refactor) |- ++(4,-2)    -- (rewrite);
+		\draw[styConn] (refactor) -- ++(7.5,0)  -- ++(0,-8)  --  (pretty-print);
+		\draw[styConn] (refactor) -- ++(-5,0) -- ++(0,-12) --  (ast);
 		\draw[styConn] (rewrite) -- (pretty-print);
 		\draw[styConn] (backend-ghc)  |- ++(2.2,-3.8) -- (ast);
 		\draw[styConn] (pretty-print) |- ++(-4,-1.8) -- (ast);
 		
 		\end{tikzpicture}
 		\caption{\pilcode{refactor} package diagram}
-		\label{fig:refact-package-diagram}
+		\label{fig:refactor-package-diagram}
 	\end{figure}
 	
 \end{document}

@@ -2,6 +2,24 @@
 \begin{document}
 	
 	\section{The testing framework}
+	
+	Testing a software is a crucial part of the development process. Many unforeseen events can arise when running our application, so it is imperative to have a comprehensive test plan to validate the correct behavior of our program. We chose the Haskell based unit testing framework, HUnit for unit testing. It allows for easily defining test cases, and since it is integrated into Tasty, it has support for aesthetic logging of the test results. It also provides a convenient command line interface for specifying how and which one of the unit tests should be run. However, our test-suite is executed by the \pilcode{stack} framework. Issuing the command below anywhere under the haskell-tools directory will run the test cases of the extension organizer refactoring.
+	
+	\begin{bash}
+		$ stack test haskell-tools-builtin-refactorings:ht-extension-organizer-test
+	\end{bash}
+	
+	The input of a test case is an entire Haskell module annotated with extension formulas on certain lines. These annotations indicate that there is a language element in the corresponding line requiring the given extension formula (the certainty level can also be specified). The annotations themselves are plain multi-line Haskell comments which will be parsed by the \pilcode{AnnotationParser}. They have to placed at the end of the line, and can contain any syntactically correct extension formula.
+	
+	The test case itself compares two results: the required extension formulas parsed from the annotations and the minimal extension set calculated by the extension eliminating algorithm. The first step is to simplify the location information present in the extension map computed by the algorithm. The original representation contain exact location information, but for testing purposes, the line of the required extension formula is sufficient.
+	
 	\section{Unit tests}
+	\begin{spacing}{1}
+		\subfile{unit_tests}
+	\end{spacing}
+		
+	
+	% Experiments && Limitations
+	\subfile{results}
 	
 \end{document}

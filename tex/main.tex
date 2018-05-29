@@ -7,6 +7,8 @@
 \date{\today}
 \author{Péter Dávid Podlovics}
 
+%TODO: titlepage, dollars, "témabejelentő", vm, system reqs(?), architecture, tests, more checkers
+
 \begin{document}
 	
 	\subfile{titlepage}
@@ -30,19 +32,13 @@
 	\addtocontents{toc}{\protect\end{adjustwidth}}%  End
 	
 	\addcontentsline{toc}{part}{Background}
-	\part*{Background}
-	\addtocontents{toc}{\protect\begin{adjustwidth}{0.8cm}{0cm}}% Begin
-		\chapter{Haskell-Tools} \label{haskell-tools}
-		\subfile{haskell_tools}
-		
+	\part*{Background} \label{background}
+	\addtocontents{toc}{\protect\begin{adjustwidth}{0.8cm}{0cm}}% Begin		
 		\chapter{GHC language extensions} \label{ghc-exts}
 		\subfile{ghc_language_extensions}
 		
 		\chapter{The extension elimination problem}
 		\subfile{ext_elim_problem}
-		
-		\chapter{Related work}
-		\subfile{related_work}
 	\addtocontents{toc}{\protect\end{adjustwidth}}%  End
 		
 	\addcontentsline{toc}{part}{Developer documentation}
@@ -50,6 +46,12 @@
 	\addtocontents{toc}{\protect\begin{adjustwidth}{0.8cm}{0cm}}% Begin
 		\chapter{Specification}
 		\subfile{specification}
+		
+		\chapter{Design}
+		\subfile{design}
+		
+		\chapter{Architecture}
+		\subfile{architecture}
 				
 		\chapter{The extension eliminating algorithm} \label{algorithm}
 		\subfile{algorithm}
@@ -57,14 +59,8 @@
 		\chapter{Extension checkers} \label{checkers}
 		\subfile{checkers}
 		
-		\chapter{Architecture}
-		\subfile{architecture}
-		
 		\chapter{Testing}
 		\subfile{testing}
-		
-		\chapter{Results}
-		\subfile{results}
 	\addtocontents{toc}{\protect\end{adjustwidth}}%  End
 
 	\addtocontents{toc}{\protect\vspace*{\baselineskip}\protect}
@@ -76,6 +72,8 @@
 	\chapter{Figures}
 	\subfile{appendices}
 	
-	\subfile{bibliography}
+	\begin{spacing}{0.2}
+		\subfile{bibliography}
+	\end{spacing}
 	
 \end{document}
